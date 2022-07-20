@@ -1,0 +1,108 @@
+killIlligal = true;
+
+geneConstraints = {
+    maxHeight = {
+        min = 1;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 100;
+        spread = 100;
+    };
+
+    maxSize = {
+        min = 1;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 10;
+        spread = 10;
+    };
+
+    efficiency = {
+        min = 0.;
+        max = 1.;
+        mean = 0.5;
+        spread = 0.5;
+    };
+
+    growthRateHeight = {
+        min = 0.;
+        max = 1.;
+        mean = 0.5;
+        spread = 0.5;
+    };
+
+    growthRateSize = {
+        min = 0.;
+        max = 1.;
+        mean = 0.5;
+        spread = 0.5;
+    };
+
+    minGrowthEnergyHeight = {
+        min = 0;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 1000;
+        spread = 1000;
+    };
+
+    minGrowthEnergySize = {
+        min = 0;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 1000;
+        spread = 1000;
+    };
+
+    spawnRate = {
+        min = 0.;
+        max = 1.;
+        mean = 0.5;
+        spread = 0.5;
+    };
+
+    minSpawnEnergy = {
+        min = 0;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 1000;
+        spread = 1000;
+    };
+
+    maxTileEnergy = {
+        min = 1;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 1000;
+        spread = 1000;
+    };
+
+    spawnEnergy = {
+        min = 1;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 100;
+        spread = 100;
+    };
+
+    spawnSize = {
+        min = 1;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 5;
+        spread = 5;
+    };
+
+    spawnSpread = {
+        min = 0;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 5;
+        spread = 5;
+    };
+
+    mutationRate = {
+        min = 0.;
+        max = 1.;
+        mean = 0.5;
+        spread = 0.5;
+    };
+
+    mutationAttempts = {
+        min = 0;
+        max = 0xFFFFFFFFFFFFFFFF;
+        mean = 10;
+        spread = 10;
+    };
+};

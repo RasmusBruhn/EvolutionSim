@@ -30,9 +30,28 @@ typedef struct __MAIN_UintConstraint MAIN_UintConstraint;
 typedef struct __MAIN_IntConstraint MAIN_IntConstraint;
 typedef struct __MAIN_FloatConstraint MAIN_FloatConstraint;
 
-struct __MAIN_Settings {
-    MAIN_GeneConstraints geneConstraints; // All the gene constraints
-    bool killIlligal; // If true then it should kill any plant created with illigal genes, if false they should be trunctated
+struct __MAIN_UintConstraint
+{
+    uint64_t min;    // The minimum allowed value
+    uint64_t max;    // The maximum allowed value
+    uint64_t mean;   // The mean starting value
+    uint64_t spread; // The spread of the starting value
+};
+
+struct __MAIN_IntConstraint
+{
+    int64_t min;    // The minimum allowed value
+    int64_t max;    // The maximum allowed value
+    int64_t mean;   // The mean starting value
+    int64_t spread; // The spread of the starting value
+};
+
+struct __MAIN_FloatConstraint
+{
+    double min;    // The minimum allowed value
+    double max;    // The maximum allowed value
+    double mean;   // The mean starting value
+    double spread; // The spread of the starting value
 };
 
 struct __MAIN_GeneConstraints {
@@ -53,25 +72,10 @@ struct __MAIN_GeneConstraints {
     MAIN_UintConstraint mutationAttempts; // The number of attempts to do a mutation during spawning
 };
 
-struct __MAIN_UintConstraint {
-    uint64_t min; // The minimum allowed value
-    uint64_t max; // The maximum allowed value
-    uint64_t mean; // The mean starting value
-    uint64_t spread; // The spread of the starting value
-};
-
-struct __MAIN_IntConstraint {
-    int64_t min; // The minimum allowed value
-    int64_t max; // The maximum allowed value
-    int64_t mean; // The mean starting value
-    int64_t spread; // The spread of the starting value
-};
-
-struct __MAIN_FloatConstraint {
-    double min; // The minimum allowed value
-    double max; // The maximum allowed value
-    double mean; // The mean starting value
-    double spread; // The spread of the starting value
+struct __MAIN_Settings
+{
+    MAIN_GeneConstraints geneConstraints; // All the gene constraints
+    bool killIlligal;                     // If true then it should kill any plant created with illigal genes, if false they should be trunctated
 };
 
 // Settings translation tables
@@ -79,28 +83,28 @@ struct __MAIN_FloatConstraint {
 #define MAIN_SETTINGSGENECONSTRAINTCOUNT 15
 #define MAIN_SETTINGSCOUNT 2
 
-const SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, min)},
     {.name = "max", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, max)},
     {.name = "mean", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, mean)},
     {.name = "spread", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, spread)}
 };
 
-const SET_TranslationTable MAIN_SettingsTableIntConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+SET_TranslationTable MAIN_SettingsTableIntConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, min)},
     {.name = "max", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, max)},
     {.name = "mean", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, mean)},
     {.name = "spread", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, spread)}
 };
 
-const SET_TranslationTable MAIN_SettingsTableFloatConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+SET_TranslationTable MAIN_SettingsTableFloatConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_FloatConstraint, min)},
     {.name = "max", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_FloatConstraint, max)},
     {.name = "mean", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_FloatConstraint, mean)},
     {.name = "spread", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_FloatConstraint, spread)}
 };
 
-const SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECONSTRAINTCOUNT] = {
+SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECONSTRAINTCOUNT] = {
     {.name = "maxHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxHeight), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "maxSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxSize), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "efficiency", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, efficiency), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
@@ -118,7 +122,7 @@ const SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECON
     {.name = "mutationAttempts", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationAttempts), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT}
 };
 
-const SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
+SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
     {.name = "geneConstraints", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, geneConstraints), .size = sizeof(MAIN_GeneConstraints), .sub = MAIN_SettingsTableGeneConstrains, .count = MAIN_SETTINGSGENECONSTRAINTCOUNT},
     {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)}
 };
@@ -126,6 +130,12 @@ const SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
 // Functions
 // Load a settings file
 MAIN_Settings *MAIN_LoadSettings(const char *FileName);
+
+// Init functions
+void MAIN_InitSettings(MAIN_Settings *Struct);
+
+// Destroy functions
+void MAIN_DestroySettings(MAIN_Settings *Struct);
 
 MAIN_Settings *MAIN_LoadSettings(const char *FileName)
 {
@@ -139,7 +149,7 @@ MAIN_Settings *MAIN_LoadSettings(const char *FileName)
     }
 
     // Load the settings
-    extern const SET_TranslationTable MAIN_SettingsTableMain[];
+    extern SET_TranslationTable MAIN_SettingsTableMain[];
 
     SET_DataStruct *SettingsDict = SET_LoadSettings(FileName);
 
@@ -159,5 +169,36 @@ MAIN_Settings *MAIN_LoadSettings(const char *FileName)
         return NULL;
     }
 
+    SET_DestroyDataStruct(SettingsDict);
+
     return Settings;
+}
+
+void MAIN_InitSettings(MAIN_Settings *Struct)
+{
+}
+
+void MAIN_DestroySettings(MAIN_Settings *Struct)
+{
+    free(Struct);
+}
+
+// Main program
+int main(int argc, char **argv)
+{
+    // Test reading a setting
+    MAIN_Settings *Settings = MAIN_LoadSettings("Settings.txt");
+
+    if (Settings == NULL)
+    {
+        printf("Unable to load settings: %s\n", MAIN_GetError());
+        return -1;
+    }
+
+    // Free settings
+    MAIN_DestroySettings(Settings);
+
+    printf("Finished without errors\n");
+
+    return 0;
 }
