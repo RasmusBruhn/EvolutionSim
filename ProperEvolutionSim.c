@@ -16,7 +16,9 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_NONE = 0x0,
     MAIN_ERRORID_LOADSETTINGS_MALLOC = 0x00010200,
     MAIN_ERRORID_LOADSETTINGS_LOAD = 0x00010201,
-    MAIN_ERRORID_LOADSETTINGS_TRANSLATE = 0x00010202
+    MAIN_ERRORID_LOADSETTINGS_TRANSLATE = 0x00010202,
+    MAIN_ERRORID_CREATEMAP_MALLOC = 0x00020200,
+    MAIN_ERRORID_CREATEMAP_MALLOCTILES = 0x00020201
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %lu)"
@@ -78,6 +80,7 @@ struct __MAIN_MapSettings {
     uint64_t width; // The width of the map
     uint64_t height; // The height of the map
     uint64_t minEnergy; // The minimum energy production per tile
+    uint64_t maxEnergy; // The maximum energy production per tile
 };
 
 struct __MAIN_Settings {
@@ -95,6 +98,8 @@ struct __MAIN_Map {
     MAIN_Settings *settings; // The settings of the map
     MAIN_Tile *tiles; // All of the tiles for the map
     MAIN_Size size; // The size of the map
+    MAIN_Plant **plantList; // A list with all of the plants on the map with the oldest first
+    size_t plantCount; // The number of plants in the plant list
 };
 
 struct __MAIN_Tile {
@@ -111,7 +116,7 @@ struct __MAIN_Plant {
 #define MAIN_SETTINGSCONSTRAINTCOUNT 4
 #define MAIN_SETTINGSGENECONSTRAINTCOUNT 15
 #define MAIN_SETTINGSCOUNT 3
-#define MAIN_SETTINGSMAPCOUNT 3
+#define MAIN_SETTINGSMAPCOUNT 4
 
 SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, min)},
@@ -155,7 +160,8 @@ SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECONSTRAIN
 SET_TranslationTable MAIN_SettingsTableMap[MAIN_SETTINGSMAPCOUNT] = {
     {.name = "width", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, width)},
     {.name = "height", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, height)},
-    {.name = "minEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, minEnergy)}
+    {.name = "minEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, minEnergy)},
+    {.name = "maxEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)}
 };
 
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
@@ -169,7 +175,7 @@ SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
 MAIN_Settings *MAIN_LoadSettings(const char *FileName);
 
 // Create a new map
-MAIN_Map *MAIN_CreateMap(const char *FileName);
+MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings);
 
 // Init functions
 void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct);
@@ -246,10 +252,40 @@ MAIN_Settings *MAIN_LoadSettings(const char *FileName)
     return Settings;
 }
 
-MAIN_Map *MAIN_CreateMap(const char *FileName)
+MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
 {
     // Allocate memory
+    MAIN_Map *Map = (MAIN_Map *)malloc(sizeof(MAIN_Map));
 
+    if (Map == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_CREATEMAP_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Map));
+        return NULL;
+    }
+
+    MAIN_InitMap(Map);
+
+    // Insert the settings
+    Map->settings = Settings;
+
+    // Copy the size
+    Map->size.w = Settings->map.width;
+    Map->size.h = Settings->map.height;
+
+    // Initialise the tiles
+    Map->tiles = (MAIN_Tile *)malloc(sizeof(MAIN_Tile) * Map->size.w * Map->size.h);
+
+    if (Map->tiles == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_CREATEMAP_MALLOCTILES, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Tile) * Map->size.w * Map->size.h);
+        MAIN_DestroyMap(Map);
+        return NULL;
+    }
+
+    for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; ++TileList)
+        MAIN_InitTile(TileList);
+
+    return Map;
 }
 
 
@@ -360,6 +396,7 @@ void MAIN_InitMapSettings(MAIN_MapSettings *Struct)
     Struct->height = 1024;
     Struct->width = 1024;
     Struct->minEnergy = 1000;
+    Struct->maxEnergy = 10000;
 }
 
 void MAIN_InitSettings(MAIN_Settings *Struct)
@@ -374,6 +411,8 @@ void MAIN_InitMap(MAIN_Map *Struct)
     Struct->settings = NULL;
     MAIN_InitSize(&Struct->size);
     Struct->tiles = NULL;
+    Struct->plantList = NULL;
+    Struct->plantCount = 0;
 }
 
 void MAIN_InitTile(MAIN_Tile *Struct)
@@ -446,10 +485,6 @@ void MAIN_CleanSettings(MAIN_Settings *Struct)
 
 void MAIN_CleanMap(MAIN_Map *Struct)
 {
-    // Destroy settings
-    if (Struct->settings != NULL)
-        MAIN_DestroySettings(Struct->settings);
-
     // Destroy tiles
     if (Struct->tiles != NULL)
     {
@@ -461,6 +496,16 @@ void MAIN_CleanMap(MAIN_Map *Struct)
 
     // Clean the size
     MAIN_CleanSize(&Struct->size);
+
+    // Clean remaining plants
+    if (Struct->plantList != NULL)
+    {
+        for (MAIN_Plant **PlantList = Struct->plantList, **EndPlantList = Struct->plantList + Struct->plantCount; PlantList < EndPlantList; ++PlantList)
+            if (*PlantList != NULL)
+                free(*PlantList);
+
+        free(Struct->plantList);
+    }
 }
 
 void MAIN_CleanTile(MAIN_Tile *Struct)
@@ -560,7 +605,17 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // Free settings
+    // Test creating a map
+    MAIN_Map *Map = MAIN_CreateMap(Settings);
+
+    if (Map == NULL)
+    {
+        printf("Unable to create map: %s\n", MAIN_GetError());
+        return -1;
+    }
+
+    // Clean up
+    MAIN_DestroyMap(Map);
     MAIN_DestroySettings(Settings);
 
     printf("Finished without errors\n");
