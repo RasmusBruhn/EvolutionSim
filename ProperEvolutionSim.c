@@ -36,6 +36,7 @@ typedef struct __MAIN_UintConstraint MAIN_UintConstraint;
 typedef struct __MAIN_IntConstraint MAIN_IntConstraint;
 typedef struct __MAIN_FloatConstraint MAIN_FloatConstraint;
 typedef struct __MAIN_MapSettings MAIN_MapSettings;
+typedef struct __MAIN_InitialSettings MAIN_InitialSettings;
 typedef struct __MAIN_Size MAIN_Size;
 typedef struct __MAIN_Map MAIN_Map;
 typedef struct __MAIN_Tile MAIN_Tile;
@@ -89,9 +90,14 @@ struct __MAIN_MapSettings {
     uint64_t maxEnergy; // The maximum energy production per tile
 };
 
+struct __MAIN_InitialSettings {
+    uint64_t count; // The number of plant to create at the beginning
+};
+
 struct __MAIN_Settings {
     MAIN_GeneConstraints geneConstraints; // All the gene constraints
     MAIN_MapSettings map;                 // All the map settings
+    MAIN_InitialSettings init;            // The settings for the initial population
     bool killIlligal;                     // If true then it should kill any plant created with illigal genes, if false they should be trunctated
 };
 
@@ -106,6 +112,7 @@ struct __MAIN_Map {
     MAIN_Size size; // The size of the map
     MAIN_Plant **plantList; // A list with all of the plants on the map with the oldest first
     size_t plantCount; // The number of plants in the plant list
+    uint64_t time; // The tick counter which keeps going up
 };
 
 struct __MAIN_Tile {
@@ -151,8 +158,9 @@ struct __MAIN_Plant {
 // Settings translation tables
 #define MAIN_SETTINGSCONSTRAINTCOUNT 4
 #define MAIN_SETTINGSGENECONSTRAINTCOUNT 15
-#define MAIN_SETTINGSCOUNT 3
+#define MAIN_SETTINGSCOUNT 4
 #define MAIN_SETTINGSMAPCOUNT 4
+#define MAIN_SETTINGSINITCOUNT 1
 
 SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, min)},
@@ -200,9 +208,14 @@ SET_TranslationTable MAIN_SettingsTableMap[MAIN_SETTINGSMAPCOUNT] = {
     {.name = "maxEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)}
 };
 
+SET_TranslationTable MAIN_SettingsTableInit[MAIN_SETTINGSINITCOUNT] = {
+    {.name = "count", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, count)}
+};
+
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
     {.name = "geneConstraints", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, geneConstraints), .size = sizeof(MAIN_GeneConstraints), .sub = MAIN_SettingsTableGeneConstrains, .count = MAIN_SETTINGSGENECONSTRAINTCOUNT},
     {.name = "map", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, map), .size = sizeof(MAIN_MapSettings), .sub = MAIN_SettingsTableMap, .count = MAIN_SETTINGSMAPCOUNT},
+    {.name = "init", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, init), .size = sizeof(MAIN_InitialSettings), .sub = MAIN_SettingsTableInit, .count = MAIN_SETTINGSINITCOUNT},
     {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)}
 };
 
@@ -213,12 +226,22 @@ MAIN_Settings *MAIN_LoadSettings(const char *FileName);
 // Create a new map
 MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings);
 
+// Create a plant and mutates the parent genes for it
+bool *MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene);
+
+// Adds a plant to a tile
+bool *MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant);
+
+// Calculates the energy usage of a plant
+uint64_t MAIN_EnergyUsage(MAIN_Plant *Plant);
+
 // Init functions
 void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct);
 void MAIN_InitIntConstraint(MAIN_IntConstraint *Struct);
 void MAIN_InitFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_InitMapSettings(MAIN_MapSettings *Struct);
+void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct);
 void MAIN_InitSettings(MAIN_Settings *Struct);
 void MAIN_InitMap(MAIN_Map *Struct);
 void MAIN_InitTile(MAIN_Tile *Struct);
@@ -233,6 +256,7 @@ void MAIN_CleanIntConstraint(MAIN_IntConstraint *Struct);
 void MAIN_CleanFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct);
+void MAIN_CleanInitialSettings(MAIN_InitialSettings *Struct);
 void MAIN_CleanSettings(MAIN_Settings *Struct);
 void MAIN_CleanMap(MAIN_Map *Struct);
 void MAIN_CleanTile(MAIN_Tile *Struct);
@@ -247,6 +271,7 @@ void MAIN_DestroyIntConstraint(MAIN_IntConstraint *Struct);
 void MAIN_DestroyFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_DestroyGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_DestroyMapSettings(MAIN_MapSettings *Struct);
+void MAIN_DestroyInitialSettings(MAIN_InitialSettings *Struct);
 void MAIN_DestroySettings(MAIN_Settings *Struct);
 void MAIN_DestroyMap(MAIN_Map *Struct);
 void MAIN_DestroyTile(MAIN_Tile *Struct);
@@ -330,6 +355,23 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
     // Populate with random plants
 
     return Map;
+}
+
+bool *MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene)
+{
+    // Allocate memory
+
+    // Set age
+
+    // Add map to plant
+
+    // Copy genes with mutation
+
+    // Add to tile
+
+    // Set energy usage
+
+    // Set energy
 }
 
 
@@ -443,10 +485,16 @@ void MAIN_InitMapSettings(MAIN_MapSettings *Struct)
     Struct->maxEnergy = 10000;
 }
 
+void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct)
+{
+    Struct->count = 1000;
+}
+
 void MAIN_InitSettings(MAIN_Settings *Struct)
 {
     MAIN_InitGeneConstraints(&Struct->geneConstraints);
     MAIN_InitMapSettings(&Struct->map);
+    MAIN_InitInitialSettings(&Struct->init);
     Struct->killIlligal = true;
 }
 
@@ -457,6 +505,7 @@ void MAIN_InitMap(MAIN_Map *Struct)
     Struct->tiles = NULL;
     Struct->plantList = NULL;
     Struct->plantCount = 0;
+    Struct->time = 0;
 }
 
 void MAIN_InitTile(MAIN_Tile *Struct)
@@ -546,6 +595,11 @@ void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct)
 }
 
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct)
+{
+
+}
+
+void MAIN_CleanInitialSettings(MAIN_InitialSettings *Struct)
 {
 
 }
@@ -763,6 +817,12 @@ void MAIN_DestroyGeneConstraints(MAIN_GeneConstraints *Struct)
 void MAIN_DestroyMapSettings(MAIN_MapSettings *Struct)
 {
     MAIN_CleanMapSettings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyInitialSettings(MAIN_InitialSettings *Struct)
+{
+    MAIN_CleanInitialSettings(Struct);
     free(Struct);
 }
 

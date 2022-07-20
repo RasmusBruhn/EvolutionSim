@@ -7,6 +7,10 @@ map = {
     maxEnergy = 10000;
 };
 
+init = {
+    count = 1000;
+};
+
 geneConstraints = {
     maxHeight = {
         min = 1;
