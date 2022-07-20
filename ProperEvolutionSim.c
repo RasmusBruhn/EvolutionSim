@@ -18,12 +18,16 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_LOADSETTINGS_LOAD = 0x00010201,
     MAIN_ERRORID_LOADSETTINGS_TRANSLATE = 0x00010202,
     MAIN_ERRORID_CREATEMAP_MALLOC = 0x00020200,
-    MAIN_ERRORID_CREATEMAP_MALLOCTILES = 0x00020201
+    MAIN_ERRORID_CREATEMAP_MALLOCTILES = 0x00020201,
+    MAIN_ERRORID_CLEANPLANT_INTILE = 0x00010100,
+    MAIN_ERRORID_CLEANPLANT_INMAP = 0x00010101
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %lu)"
 #define MAIN_ERRORMES_LOADSETTINGS "Unable to load settings (FileName: %s)"
 #define MAIN_ERRORMES_TRANSLATESETTINGS "Unable to translate settings (FileName: %s)"
+#define MAIN_ERRORMES_PLANTINTILE "Unable to locate plant in tiles plant list"
+#define MAIN_ERRORMES_PLANTINMAP "Unable to locate plant in maps plant list"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -36,6 +40,8 @@ typedef struct __MAIN_Size MAIN_Size;
 typedef struct __MAIN_Map MAIN_Map;
 typedef struct __MAIN_Tile MAIN_Tile;
 typedef struct __MAIN_Plant MAIN_Plant;
+typedef struct __MAIN_Gene MAIN_Gene;
+typedef struct __MAIN_PlantStats MAIN_PlantStats;
 
 struct __MAIN_UintConstraint {
     uint64_t min;    // The minimum allowed value
@@ -108,8 +114,38 @@ struct __MAIN_Tile {
     uint64_t energy; // The energy production of the tile
 };
 
-struct __MAIN_Plant {
+struct __MAIN_Gene {
+    uint64_t maxHeight;             // The maximum height of the plant
+    uint64_t maxSize;               // The maximum size of the plant
+    double efficiency;              // The effieciency at collecting energy
+    double growthRateHeight;        // The probability the plant will grow in height if it can
+    double growthRateSize;          // The probability the plant will grow in size if it can
+    uint64_t minGrowthEnergyHeight; // The minimum energy required to grow in height
+    uint64_t minGrowthEnergySize;   // The minimum energy required to grow in size
+    double spawnRate;               // The probability of spawning if it can
+    uint64_t minSpawnEnergy;        // The minimum energy required to spawn
+    uint64_t maxTileEnergy;         // The maximum amount of energy allowed to store per tile
+    uint64_t spawnEnergy;           // The amount of energy to give each seed
+    uint64_t spawnSize;             // The average number of seeds per spawning
+    uint64_t spawnSpread;           // The spread of the number of seeds per spawning
+    double mutationRate;            // The probability that a mutation occurs during spawning
+    uint64_t mutationAttempts;      // The number of attempts to do a mutation during spawning
+};
 
+struct __MAIN_PlantStats {
+    uint64_t size; // The size of the plant
+    uint64_t height; // The height of the plant
+    uint64_t energy; // The energy storage of the plant
+    uint64_t age; // At what random tick it was born
+    uint64_t energyUsage; // The amount of energy to use per turn
+    uint64_t maxEnergy; // The maximum amount of energy the plant can store
+};
+
+struct __MAIN_Plant {
+    MAIN_Gene gene; // The genes for this plant
+    MAIN_Tile **tileList; // A list of all the tiles this plant is within
+    MAIN_PlantStats stats; // The stats of the plant
+    MAIN_Map *map; // The map this plant belongs to
 };
 
 // Settings translation tables
@@ -187,6 +223,8 @@ void MAIN_InitSettings(MAIN_Settings *Struct);
 void MAIN_InitMap(MAIN_Map *Struct);
 void MAIN_InitTile(MAIN_Tile *Struct);
 void MAIN_InitPlant(MAIN_Plant *Struct);
+void MAIN_InitPlantStats(MAIN_PlantStats *Struct);
+void MAIN_InitGene(MAIN_Gene *Struct);
 void MAIN_InitSize(MAIN_Size *Struct);
 
 // Clean functions
@@ -199,6 +237,8 @@ void MAIN_CleanSettings(MAIN_Settings *Struct);
 void MAIN_CleanMap(MAIN_Map *Struct);
 void MAIN_CleanTile(MAIN_Tile *Struct);
 void MAIN_CleanPlant(MAIN_Plant *Struct);
+void MAIN_CleanPlantStats(MAIN_PlantStats *Struct);
+void MAIN_CleanGene(MAIN_Gene *Struct);
 void MAIN_CleanSize(MAIN_Size *Struct);
 
 // Destroy functions
@@ -211,6 +251,8 @@ void MAIN_DestroySettings(MAIN_Settings *Struct);
 void MAIN_DestroyMap(MAIN_Map *Struct);
 void MAIN_DestroyTile(MAIN_Tile *Struct);
 void MAIN_DestroyPlant(MAIN_Plant *Struct);
+void MAIN_DestroyPlantStats(MAIN_PlantStats *Struct);
+void MAIN_DestroyGene(MAIN_Gene *Struct);
 void MAIN_DestroySize(MAIN_Size *Struct);
 
 MAIN_Settings *MAIN_LoadSettings(const char *FileName)
@@ -284,6 +326,8 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
 
     for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; ++TileList)
         MAIN_InitTile(TileList);
+
+    // Populate with random plants
 
     return Map;
 }
@@ -424,7 +468,39 @@ void MAIN_InitTile(MAIN_Tile *Struct)
 
 void MAIN_InitPlant(MAIN_Plant *Struct)
 {
+    Struct->map = NULL;
+    Struct->tileList = NULL;
+    MAIN_InitPlantStats(&Struct->stats);
+    MAIN_InitGene(&Struct->gene);
+}
 
+void MAIN_InitPlantStats(MAIN_PlantStats *Struct)
+{
+    Struct->age = 0;
+    Struct->energy = 0;
+    Struct->energyUsage = 0;
+    Struct->height = 0;
+    Struct->maxEnergy = 0;
+    Struct->size = 0;
+}
+
+void MAIN_InitGene(MAIN_Gene *Struct)
+{
+    Struct->maxHeight = 0;
+    Struct->maxSize = 0;
+    Struct->efficiency = 0.;
+    Struct->growthRateHeight = 0.;
+    Struct->growthRateSize = 0.;
+    Struct->maxTileEnergy = 0;
+    Struct->minGrowthEnergyHeight = 0;
+    Struct->minGrowthEnergySize = 0;
+    Struct->minSpawnEnergy = 0;
+    Struct->mutationAttempts = 0;
+    Struct->mutationRate = 0.;
+    Struct->spawnEnergy = 0;
+    Struct->spawnRate = 0.;
+    Struct->spawnSize = 0;
+    Struct->spawnSpread = 0;
 }
 
 void MAIN_InitSize(MAIN_Size *Struct)
@@ -485,7 +561,16 @@ void MAIN_CleanSettings(MAIN_Settings *Struct)
 
 void MAIN_CleanMap(MAIN_Map *Struct)
 {
-    // Destroy tiles
+    // Destroy remaining plants
+    if (Struct->plantList != NULL)
+        for (MAIN_Plant **PlantList = Struct->plantList + Struct->plantCount - 1, **StartPlantList = Struct->plantList; PlantList >= StartPlantList; ++PlantList)
+            if (*PlantList != NULL)
+                MAIN_DestroyPlant(*PlantList);
+
+    if (Struct->plantList != NULL)
+        free(Struct->plantList);
+
+    // Clean tiles
     if (Struct->tiles != NULL)
     {
         for (MAIN_Tile *TileList = Struct->tiles, *EndTileList = Struct->tiles + Struct->size.w * Struct->size.h; TileList < EndTileList; ++TileList)
@@ -496,32 +581,151 @@ void MAIN_CleanMap(MAIN_Map *Struct)
 
     // Clean the size
     MAIN_CleanSize(&Struct->size);
-
-    // Clean remaining plants
-    if (Struct->plantList != NULL)
-    {
-        for (MAIN_Plant **PlantList = Struct->plantList, **EndPlantList = Struct->plantList + Struct->plantCount; PlantList < EndPlantList; ++PlantList)
-            if (*PlantList != NULL)
-                free(*PlantList);
-
-        free(Struct->plantList);
-    }
 }
 
 void MAIN_CleanTile(MAIN_Tile *Struct)
 {
     // Free the plants
     if (Struct->plantList != NULL)
-    {
-        for (MAIN_Plant **List = Struct->plantList, **EndList = Struct->plantList + Struct->plantCount; List < EndList; ++List)
-            if (*List != NULL)
-                MAIN_DestroyPlant(*List);
-
         free(Struct->plantList);
-    }
 }
 
 void MAIN_CleanPlant(MAIN_Plant *Struct)
+{
+    // Remove from tiles
+    if (Struct->tileList != NULL)
+    {
+        for (MAIN_Tile **TileList = Struct->tileList, **EndTileList = Struct->tileList + Struct->stats.size; TileList < EndTileList; ++TileList)
+        {
+            // Find it in the plant list
+            MAIN_Plant **PlantList = (*TileList)->plantList;
+
+            for (MAIN_Plant **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
+            {
+                if ((*MiddlePlantList)->stats.height > Struct->stats.height)
+                    PlantList = MiddlePlantList;
+
+                else if ((*MiddlePlantList)->stats.height < Struct->stats.height)
+                    EndPlantList = MiddlePlantList;
+
+                else
+                    break;
+            }
+
+            // Make sure it found it
+            MAIN_Plant **FoundPlant = NULL;
+
+            for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = (*TileList)->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.height == Struct->stats.height; --TempPlantList)
+                if (*TempPlantList == Struct)
+                {
+                    FoundPlant = TempPlantList;
+                    break;
+                }
+
+            if (FoundPlant == NULL)
+                for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = (*TileList)->plantList + (*TileList)->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.height == Struct->stats.height; ++TempPlantList)
+                    if (*TempPlantList == Struct)
+                    {
+                        FoundPlant = TempPlantList;
+                        break;
+                    }
+
+            if (FoundPlant == NULL)
+            {
+                _MAIN_AddError(MAIN_ERRORID_CLEANPLANT_INTILE, MAIN_ERRORMES_PLANTINTILE);
+                continue;
+            }
+
+            // Remove it from the list
+            ++FoundPlant;
+
+            for (MAIN_Plant **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount; FoundPlant < EndPlantList; ++FoundPlant)
+                *(FoundPlant - 1) = *FoundPlant;
+
+            // Free the list if needed
+            if (--((*TileList)->plantCount) == 0)
+            {
+                free((*TileList)->plantList);
+                (*TileList)->plantList = NULL;
+            }
+
+            // Realloc
+            else
+                (*TileList)->plantList = realloc((*TileList)->plantList, sizeof(MAIN_Plant *) * (*TileList)->plantCount);
+        }
+
+        free(Struct->tileList);
+    }
+
+    // Remove it from the map list
+    MAIN_Plant **PlantList = Struct->map->plantList;
+
+    for (MAIN_Plant **EndPlantList = Struct->map->plantList + Struct->map->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
+    {
+        if ((*MiddlePlantList)->stats.age > Struct->stats.age)
+            EndPlantList = MiddlePlantList;
+
+        else if ((*MiddlePlantList)->stats.age < Struct->stats.age)
+            PlantList = MiddlePlantList;
+
+        else
+            break;
+    }
+
+    // Make sure it found it
+    MAIN_Plant **FoundPlant = NULL;
+
+    for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = Struct->map->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.age == Struct->stats.age; --TempPlantList)
+        if (*TempPlantList == Struct)
+        {
+            FoundPlant = TempPlantList;
+            break;
+        }
+
+    if (FoundPlant == NULL)
+        for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = Struct->map->plantList + Struct->map->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.age == Struct->stats.age; ++TempPlantList)
+            if (*TempPlantList == Struct)
+            {
+                FoundPlant = TempPlantList;
+                break;
+            }
+
+    if (FoundPlant == NULL)
+        _MAIN_AddError(MAIN_ERRORID_CLEANPLANT_INMAP, MAIN_ERRORMES_PLANTINMAP);
+
+    else
+    {
+        // Remove it from the list
+        ++FoundPlant;
+
+        for (MAIN_Plant **EndPlantList = Struct->map->plantList + Struct->map->plantCount; FoundPlant < EndPlantList; ++FoundPlant)
+            *(FoundPlant - 1) = *FoundPlant;
+
+        // Free the list if needed
+        if (--(Struct->map->plantCount) == 0)
+        {
+            free(Struct->map->plantList);
+            Struct->map->plantList = NULL;
+        }
+
+        // Realloc
+        else
+            Struct->map->plantList = realloc(Struct->map->plantList, sizeof(MAIN_Plant *) * Struct->map->plantCount);
+    }
+
+    // Clean stats
+    MAIN_CleanPlantStats(&Struct->stats);
+
+    // Clean genes
+    MAIN_CleanGene(&Struct->gene);
+}
+
+void MAIN_CleanPlantStats(MAIN_PlantStats *Struct)
+{
+
+}
+
+void MAIN_CleanGene(MAIN_Gene *Struct)
 {
 
 }
@@ -586,6 +790,18 @@ void MAIN_DestroyPlant(MAIN_Plant *Struct)
     free(Struct);
 }
 
+void MAIN_DestroyPlantStats(MAIN_PlantStats *Struct)
+{
+    MAIN_CleanPlantStats(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyGene(MAIN_Gene *Struct)
+{
+    MAIN_CleanGene(Struct);
+    free(Struct);
+}
+
 void MAIN_DestroySize(MAIN_Size *Struct)
 {
     MAIN_CleanSize(Struct);
@@ -617,6 +833,11 @@ int main(int argc, char **argv)
     // Clean up
     MAIN_DestroyMap(Map);
     MAIN_DestroySettings(Settings);
+
+    // Print errors
+    char *ErrorMes;
+    while ((ErrorMes = MAIN_GetArchivedError()) != NULL)
+        printf("Error: %s\n", ErrorMes);
 
     printf("Finished without errors\n");
 
