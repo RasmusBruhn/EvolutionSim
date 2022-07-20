@@ -1,5 +1,12 @@
 killIlligal = true;
 
+map = {
+    width = 1024;
+    height = 1024;
+    minEnergy = 1000;
+    maxEnergy = 10000;
+};
+
 geneConstraints = {
     maxHeight = {
         min = 1;
