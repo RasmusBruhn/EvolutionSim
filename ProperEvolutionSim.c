@@ -903,7 +903,7 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAI
 
     // Set energy
     Plant->stats.energy = Energy;
-printf("Energy: %f/%f - %u", (double)Plant->stats.energy, (double)Plant->stats.maxEnergy, (uint64_t)Plant->stats.energy > (uint64_t)Plant->stats.maxEnergy);
+printf("Energy: %ld/%ld - %u", Plant->stats.energy, Plant->stats.maxEnergy, Plant->stats.energy > Plant->stats.maxEnergy);
     if (Plant->stats.energy > Plant->stats.maxEnergy)
     {printf(" Test");
         Plant->stats.energy = Plant->stats.maxEnergy;}
