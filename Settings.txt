@@ -3,7 +3,7 @@ killIlligal = true;
 map = {
     width = 1;
     height = 1;
-    minEnergy = 1000;
+    minEnergy = 100;
     maxEnergy = 10000;
     energyMethod = "const";
 };

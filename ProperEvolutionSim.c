@@ -34,7 +34,11 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_REMOVEFROMMAP_INMAP = 0x00060200,
     MAIN_ERRORID_REMOVEFROMMAP_PLANTLIST = 0x00060201,
     MAIN_ERRORID_ADDTOTILE_REALLOC = 0x00070200,
-    MAIN_ERRORID_ADDTOMAP_REALLOC = 0x00080200
+    MAIN_ERRORID_ADDTOMAP_REALLOC = 0x00080200,
+    MAIN_ERRORID_STEP_MALLOC = 0x00090200,
+    MAIN_ERRORID_STEP_SPAWN = 0x00090201,
+    MAIN_ERRORID_STEP_GROWHEIGHT = 0x00090202,
+    MAIN_ERRORID_STEP_GROWSIZE = 0x00090203
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %llu)"
@@ -52,6 +56,9 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_REMOVEPLANTFROMTILE "Unable to remove plant from tile"
 #define MAIN_ERRORMES_REMOVEPLANTFROMMAP "Unable to remove plant from map"
 #define MAIN_ERRORMES_NULLPLANTLIST "Plant list is NULL"
+#define MAIN_ERRORMES_SPAWN "An error occured while spawning new plants"
+#define MAIN_ERRORMES_GROWHEIGHT "An error occured while growing in height"
+#define MAIN_ERRORMES_GROWSIZE "An error occured while growing in size"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -345,6 +352,18 @@ uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant);
 
 // Calculates the biomass for a plant
 uint64_t MAIN_Biomass(const MAIN_Plant *Plant);
+
+// Does one step of the evolution
+bool MAIN_Step(MAIN_Map *Map);
+
+// Create spawn from a tree, if positive the plant died, if negative it was an error
+int8_t MAIN_Spawn(const MAIN_Tile *Tile, MAIN_Plant *Parent);
+
+// Grow in height
+bool MAIN_GrowHeight(MAIN_Plant *Plant);
+
+// Grow in size
+bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant);
 
 
 // Init functions
@@ -846,7 +865,6 @@ uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
 {
     uint64_t StorageEnergy = (uint64_t)(Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow));
     uint64_t BaseEnergy = (uint64_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow));
-    //printf("%llu, %llu, %f, %llu, %f\n", StorageEnergy, BaseEnergy, Plant->map->settings->energy.storageRate, Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow);
     return StorageEnergy + BaseEnergy;
 }
 
@@ -916,6 +934,104 @@ uint64_t MAIN_Biomass(const MAIN_Plant *Plant)
     uint64_t StorageSize = (uint64_t)((double)Plant->stats.maxEnergy * Plant->map->settings->energy.growthStorage);
     uint64_t BaseSize = (uint64_t)((double)(Plant->stats.height * Plant->stats.size) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
     return StorageSize + BaseSize;
+}
+
+bool MAIN_Step(MAIN_Map *Map)
+{
+    // Increase timer
+    ++Map->time;
+
+    // Get random tile
+    MAIN_Tile *Tile = Map->tiles + (RNG_RandS(Map->random) % (Map->size.w * Map->size.h));
+
+    if (Tile->plantCount == 0)
+        return true;
+
+    // Get energy
+    uint64_t Energy = Tile->energy;
+
+    // Copy plant list
+    MAIN_Plant **TempPlantList = (MAIN_Plant **)malloc(sizeof(MAIN_Plant *) * Tile->plantCount);
+
+    if (TempPlantList == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_STEP_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Plant *) * Tile->plantCount);
+        return false;
+    }
+
+    memcpy(TempPlantList, Tile->plantList, sizeof(MAIN_Plant *) * Tile->plantCount);
+
+    // Run through plant list
+    for (MAIN_Plant **PlantList = TempPlantList, **EndPlantList = TempPlantList + Tile->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Give energy
+        uint64_t GetEnergy = (uint64_t)((double)Energy * (*PlantList)->gene.efficiency);
+        Energy -= GetEnergy;
+        (*PlantList)->stats.energy += GetEnergy;
+
+        // Take energy
+        if ((*PlantList)->stats.energyUsage > (*PlantList)->stats.energy)
+        {
+            MAIN_DestroyPlant(*PlantList);
+            continue;
+        }
+
+        (*PlantList)->stats.energy -= (*PlantList)->stats.energyUsage;
+
+        // Spawn
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minSpawnEnergy && RNG_RandSf(Map->random) < (*PlantList)->gene.spawnRate)
+        {
+            int8_t ReturnValue = MAIN_Spawn(Tile, *PlantList);
+
+            if (ReturnValue < 0)
+            {
+                _MAIN_AddError(MAIN_ERRORID_STEP_SPAWN, MAIN_ERRORMES_SPAWN);
+                return false;
+            }
+
+            else if (ReturnValue > 0)
+            {
+                MAIN_DestroyPlant(*PlantList);
+                continue;
+            }
+        }
+
+        // Grow in height
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergyHeight && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateHeight)
+            if (!MAIN_GrowHeight(*PlantList))
+            {
+                _MAIN_AddError(MAIN_ERRORID_STEP_GROWHEIGHT, MAIN_ERRORMES_GROWHEIGHT);
+                return false;
+            }
+
+        // Grow in size
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
+            if (!MAIN_GrowSize(Tile, *PlantList))
+            {
+                _MAIN_AddError(MAIN_ERRORID_STEP_GROWSIZE, MAIN_ERRORMES_GROWSIZE);
+                return false;
+            }
+    }
+
+    // Free copy of plant list
+    free(TempPlantList);
+
+    return true;
+}
+
+int8_t MAIN_Spawn(const MAIN_Tile *Tile, MAIN_Plant *Parent)
+{
+    return 0;
+}
+
+bool MAIN_GrowHeight(MAIN_Plant *Plant)
+{
+    return true;
+}
+
+bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant)
+{
+    return true;
 }
 
 
@@ -1380,7 +1496,25 @@ int main(int argc, char **argv)
     // Print energy usage
     /*for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
         printf("EnergyUsage: %llu\n", (*PlantList)->stats.energyUsage);*/
-    printf("%llu, %llu, %llu, %llu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
+    //printf("%llu, %llu, %llu, %llu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
+
+    // Do the simulation
+    bool Running = true;
+
+    for (uint64_t Step = 0; Step < 20 && Running; ++Step)
+    {
+        for (uint64_t SubStep = 0; SubStep < 2; ++SubStep)
+            if (!MAIN_Step(Map))
+            {
+                printf("Error while doing a simulation step: %s\n", MAIN_GetError());
+                Running = false;
+                break;
+            }
+
+        printf("PlantCount: %llu\n", Map->plantCount);
+    }
+
+    printf("FinalPlantCount: %llu\n", Map->plantCount);
 
     // Clean up
     MAIN_DestroyMap(Map);
