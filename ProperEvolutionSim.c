@@ -845,7 +845,8 @@ bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
 uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
 {
     uint64_t StorageEnergy = (uint64_t)(Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow));
-    uint64_t BaseEnergy = (uint64_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp((double)Plant->gene.efficiency * Plant->map->settings->energy.effPow));
+    uint64_t BaseEnergy = (uint64_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow));
+    //printf("%llu, %llu, %f, %llu, %f\n", StorageEnergy, BaseEnergy, Plant->map->settings->energy.storageRate, Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow);
     return StorageEnergy + BaseEnergy;
 }
 
@@ -903,11 +904,7 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAI
 
     // Set energy
     Plant->stats.energy = Energy;
-<<<<<<< HEAD
 
-=======
-printf("Energy: %ld/%ld - %u", Plant->stats.energy, Plant->stats.maxEnergy, Plant->stats.energy > Plant->stats.maxEnergy);
->>>>>>> 9d8bc81922609fdc5f05b386042c40aa0a5336c2
     if (Plant->stats.energy > Plant->stats.maxEnergy)
         Plant->stats.energy = Plant->stats.maxEnergy;
 
@@ -917,7 +914,7 @@ printf("Energy: %ld/%ld - %u", Plant->stats.energy, Plant->stats.maxEnergy, Plan
 uint64_t MAIN_Biomass(const MAIN_Plant *Plant)
 {
     uint64_t StorageSize = (uint64_t)((double)Plant->stats.maxEnergy * Plant->map->settings->energy.growthStorage);
-    uint64_t BaseSize = (uint64_t)((double)(Plant->stats.height * Plant->stats.size) * exp((double)Plant->gene.efficiency * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
+    uint64_t BaseSize = (uint64_t)((double)(Plant->stats.height * Plant->stats.size) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
     return StorageSize + BaseSize;
 }
 
@@ -959,7 +956,7 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->maxSize.spread = 10;
 
     Struct->efficiency.min = 0.;
-    Struct->efficiency.max = 1.;
+    Struct->efficiency.max = 0.99;
     Struct->efficiency.mean = 0.5;
     Struct->efficiency.spread = 0.5;
 
