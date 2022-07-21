@@ -34,6 +34,7 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_REMOVEFROMMAP_INMAP = 0x00060200,
     MAIN_ERRORID_REMOVEFROMMAP_PLANTLIST = 0x00060201,
     MAIN_ERRORID_ADDTOTILE_REALLOC = 0x00070200,
+    MAIN_ERRORID_ADDTOTILE_REALLOC2 = 0x00070201,
     MAIN_ERRORID_ADDTOMAP_REALLOC = 0x00080200,
     MAIN_ERRORID_STEP_MALLOC = 0x00090200,
     MAIN_ERRORID_STEP_SPAWN = 0x00090201,
@@ -41,13 +42,13 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_GROWSIZE = 0x00090203
 };
 
-#define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %llu)"
-#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %llu)"
+#define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %lu)"
+#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %lu)"
 #define MAIN_ERRORMES_LOADSETTINGS "Unable to load settings (FileName: %s)"
 #define MAIN_ERRORMES_TRANSLATESETTINGS "Unable to translate settings (FileName: %s)"
 #define MAIN_ERRORMES_PLANTINTILE "Unable to locate plant in tiles plant list"
 #define MAIN_ERRORMES_PLANTINMAP "Unable to locate plant in maps plant list"
-#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %llu)"
+#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %lu)"
 #define MAIN_ERRORMES_ENERGYMETHOD "Uknown energy method (Method: %s)"
 #define MAIN_ERRORMES_LOWWIDTH "The width of the map is too low"
 #define MAIN_ERRORMES_LOWHEIGHT "The height of the map is too low"
@@ -685,6 +686,16 @@ bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant)
 
     Tile->plantList = NewPlantList;
 
+    MAIN_Tile **NewTileList = (MAIN_Tile **)realloc(Plant->tileList, sizeof(MAIN_Tile *) * (Plant->stats.size + 1));
+
+    if (NewTileList == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_ADDTOTILE_REALLOC2, strerror(errno), MAIN_ERRORMES_REALLOC, sizeof(MAIN_Tile *) * (Plant->stats.size + 1));
+        return false;
+    }
+
+    Plant->tileList = NewTileList;
+
     // Move other plants to find position
     MAIN_Plant **PlantList = NewPlantList + Tile->plantCount++;
 
@@ -693,8 +704,8 @@ bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant)
 
     *PlantList = Plant;
 
-    // Update size
-    ++Plant->stats.size;
+    // Add tile
+    Plant->tileList[Plant->stats.size++] = Tile;
 
     // Update energy stats
     Plant->stats.maxEnergy = Plant->stats.size * Plant->gene.maxTileEnergy;
@@ -1341,7 +1352,7 @@ void MAIN_CleanPlant(MAIN_Plant *Struct)
     // Remove from tiles
     if (Struct->tileList != NULL)
     {
-        for (MAIN_Tile **TileList = Struct->tileList + Struct->stats.size, **StartTileList = Struct->tileList; TileList >= StartTileList; --TileList)
+        for (MAIN_Tile **TileList = Struct->tileList + Struct->stats.size - 1, **StartTileList = Struct->tileList; TileList >= StartTileList; --TileList)
             if (*TileList != NULL)
                 if (!MAIN_RemoveFromTile(*TileList, Struct))
                 {
@@ -1488,15 +1499,15 @@ int main(int argc, char **argv)
 
     // Check the tile energy
     /*for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; TileList += Map->size.w)
-        printf("TileEnergy: %llu\n", TileList->energy);*/
+        printf("TileEnergy: %lu\n", TileList->energy);*/
 
     // Print the number of plants
-    printf("InitialPlantCount: %llu\n", Map->plantCount);
+    printf("InitialPlantCount: %lu\n", Map->plantCount);
 
     // Print energy usage
     /*for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
-        printf("EnergyUsage: %llu\n", (*PlantList)->stats.energyUsage);*/
-    //printf("%llu, %llu, %llu, %llu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
+        printf("EnergyUsage: %lu\n", (*PlantList)->stats.energyUsage);*/
+    //printf("%lu, %lu, %lu, %lu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
 
     // Do the simulation
     bool Running = true;
@@ -1511,10 +1522,10 @@ int main(int argc, char **argv)
                 break;
             }
 
-        printf("PlantCount: %llu\n", Map->plantCount);
+        printf("PlantCount: %lu\n", Map->plantCount);
     }
 
-    printf("FinalPlantCount: %llu\n", Map->plantCount);
+    printf("FinalPlantCount: %lu\n", Map->plantCount);
 
     // Clean up
     MAIN_DestroyMap(Map);
