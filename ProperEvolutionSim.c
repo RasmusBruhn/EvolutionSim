@@ -20,21 +20,35 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_LOADSETTINGS_TRANSLATE = 0x00010202,
     MAIN_ERRORID_CREATEMAP_MALLOC = 0x00020200,
     MAIN_ERRORID_CREATEMAP_MALLOCTILES = 0x00020201,
-    MAIN_ERRORID_CREATEMAP_GENGENE = 0x00020202,
-    MAIN_ERRORID_CREATEMAP_CREATEPLANT = 0x00020203,
-    MAIN_ERRORID_CREATEMAP_TILEENERGY = 0x00020204,
-    MAIN_ERRORID_CLEANPLANT_INTILE = 0x00010100,
-    MAIN_ERRORID_CLEANPLANT_INMAP = 0x00010101
+    MAIN_ERRORID_CREATEMAP_CREATEPLANT = 0x00020202,
+    MAIN_ERRORID_CREATEMAP_TILEENERGY = 0x00020203,
+    MAIN_ERRORID_CREATEMAP_WIDTH = 0x00020204,
+    MAIN_ERRORID_CREATEMAP_HEIGHT = 0x00020205,
+    MAIN_ERRORID_CLEANPLANT_INTILE = 0x00030100,
+    MAIN_ERRORID_CLEANPLANT_INMAP = 0x00030101,
+    MAIN_ERRORID_CREATEPLANT_MALLOC = 0x00040200,
+    MAIN_ERRORID_CREATEPLANT_TILE = 0x00040201,
+    MAIN_ERRORID_CREATEPLANT_MAP = 0x00040202,
+    MAIN_ERRORID_REMOVEFROMTILE_INTILE = 0x00050200,
+    MAIN_ERRORID_REMOVEFROMMAP_INMAP = 0x00060200,
+    MAIN_ERRORID_ADDTOTILE_REALLOC = 0x00070200,
+    MAIN_ERRORID_ADDTOMAP_REALLOC = 0x00080200
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %lu)"
+#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %lu)"
 #define MAIN_ERRORMES_LOADSETTINGS "Unable to load settings (FileName: %s)"
 #define MAIN_ERRORMES_TRANSLATESETTINGS "Unable to translate settings (FileName: %s)"
 #define MAIN_ERRORMES_PLANTINTILE "Unable to locate plant in tiles plant list"
 #define MAIN_ERRORMES_PLANTINMAP "Unable to locate plant in maps plant list"
-#define MAIN_ERRORMES_GENERATEGENE "Unable to generate gene (ID: %lu)"
 #define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %lu)"
 #define MAIN_ERRORMES_ENERGYMETHOD "Uknown energy method (Method: %s)"
+#define MAIN_ERRORMES_LOWWIDTH "The width of the map is too low"
+#define MAIN_ERRORMES_LOWHEIGHT "The height of the map is too low"
+#define MAIN_ERRORMES_ADDTOTILE "Unable to add plant to tile"
+#define MAIN_ERRORMES_ADDTOMAP "Unable to add plant to map"
+#define MAIN_ERRORMES_REMOVEPLANTFROMTILE "Unable to remove plant from tile"
+#define MAIN_ERRORMES_REMOVEPLANTFROMMAP "Unable to remove plant from map"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -117,7 +131,7 @@ struct __MAIN_Size {
 };
 
 struct __MAIN_Map {
-    MAIN_Settings *settings; // The settings of the map
+    const MAIN_Settings *settings; // The settings of the map
     MAIN_Tile *tiles; // All of the tiles for the map
     MAIN_Size size; // The size of the map
     MAIN_Plant **plantList; // A list with all of the plants on the map with the oldest first
@@ -239,36 +253,65 @@ SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
 #define MAIN_ENERGYMETHOD_COS "cos"
 #define MAIN_ENERGYMETHOD_COS2 "cos2"
 
+#define MAIN_PI 3.14159265359
+
 // Functions
 // Load a settings file
 MAIN_Settings *MAIN_LoadSettings(const char *FileName);
 
 // Create a new map
-MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings);
+MAIN_Map *MAIN_CreateMap(const MAIN_Settings *Settings);
 
 // Calculates the energy of the tiles using const method
-void MAIN_TileEnergyConst(MAIN_Tile *Tiles, MAIN_Size *Size);
-
-// Calculates the energy of the tiles using linear method
-void MAIN_TileEnergyLinear(MAIN_Tile *Tiles, MAIN_Size *Size);
+void MAIN_TileEnergyConst(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size);
 
 // Calculates the energy of the tiles using single period cos method
-void MAIN_TileEnergyCos(MAIN_Tile *Tiles, MAIN_Size *Size);
+void MAIN_TileEnergyCos(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size);
 
 // Calculates the energy of the tiles using double period cos method
-void MAIN_TileEnergyCos2(MAIN_Tile *Tiles, MAIN_Size *Size);
+void MAIN_TileEnergyCos2(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size);
+
+// Generates a uint from constraints
+uint64_t MAIN_GenerateUint(const MAIN_UintConstraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+int64_t MAIN_GenerateInt(const MAIN_IntConstraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+double MAIN_GenerateFloat(const MAIN_FloatConstraint *Constraint, uint64_t *Random);
 
 // Generate a random gene
-bool MAIN_GenerateGene(MAIN_Settings *Settings, MAIN_Gene *Gene);
+void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateUint(const MAIN_UintConstraint *Constraint, uint64_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateInt(const MAIN_IntConstraint *Constraint, int64_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateFloat(const MAIN_FloatConstraint *Constraint, double *Value);
+
+// Truncate all values of a gene so that they are legal, returns true if it trancated anything
+bool MAIN_TruncateGene(const MAIN_Settings *Settings, MAIN_Gene *Gene);
 
 // Create a plant and mutates the parent genes for it
-bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene);
+bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAIN_Gene *ParentGene);
 
 // Adds a plant to a tile
 bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant);
 
+// Removes a plant from a tile
+bool MAIN_RemoveFromTile(MAIN_Tile *Tile, const MAIN_Plant *Plant);
+
+// Adds a plant to the map
+bool MAIN_AddToMap(MAIN_Map *Map, MAIN_Plant *Plant);
+
+// Removes a plant from the map
+bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant);
+
 // Calculates the energy usage of a plant
-uint64_t MAIN_EnergyUsage(MAIN_Plant *Plant);
+uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant);
 
 // Init functions
 void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct);
@@ -354,7 +397,7 @@ MAIN_Settings *MAIN_LoadSettings(const char *FileName)
     return Settings;
 }
 
-MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
+MAIN_Map *MAIN_CreateMap(const MAIN_Settings *Settings)
 {
     // Allocate memory
     MAIN_Map *Map = (MAIN_Map *)malloc(sizeof(MAIN_Map));
@@ -374,6 +417,21 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
     Map->size.w = Settings->map.width;
     Map->size.h = Settings->map.height;
 
+    // Make sure height and width are large enough
+    if (Map->size.w < 1)
+    {
+        _MAIN_SetError(MAIN_ERRORID_CREATEMAP_WIDTH, MAIN_ERRORMES_LOWWIDTH);
+        MAIN_DestroyMap(Map);
+        return NULL;
+    }
+
+    if (Map->size.h < 1)
+    {
+        _MAIN_SetError(MAIN_ERRORID_CREATEMAP_HEIGHT, MAIN_ERRORMES_LOWHEIGHT);
+        MAIN_DestroyMap(Map);
+        return NULL;
+    }
+
     // Initialise the tiles
     Map->tiles = (MAIN_Tile *)malloc(sizeof(MAIN_Tile) * Map->size.w * Map->size.h);
 
@@ -389,16 +447,13 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
 
     // Set energy of tiles
     if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_CONST) == 0)
-        MAIN_TileEnergyConst(Map->tiles, &Map->size);
-    
-    else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_LINEAR) == 0)
-        MAIN_TileEnergyLinear(Map->tiles, &Map->size);
-        
+        MAIN_TileEnergyConst(Settings, Map->tiles, &Map->size);
+            
     else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_COS) == 0)
-        MAIN_TileEnergyCos(Map->tiles, &Map->size);    
+        MAIN_TileEnergyCos(Settings, Map->tiles, &Map->size);    
 
     else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_COS2) == 0)
-        MAIN_TileEnergyCos2(Map->tiles, &Map->size);
+        MAIN_TileEnergyCos2(Settings, Map->tiles, &Map->size);
     
     else
     {
@@ -416,12 +471,7 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
         // Generate the gene
         MAIN_Gene *Gene;
 
-        if (!MAIN_GenerateGene(Settings, Gene))
-        {
-            _MAIN_AddError(MAIN_ERRORID_CREATEMAP_GENGENE, MAIN_ERRORMES_GENERATEGENE, Var);
-            MAIN_DestroyMap(Map);
-            return NULL;
-        }
+        MAIN_GenerateGene(Map, Gene);
 
         // Find the tile
         MAIN_Tile *Tile = Map->tiles + RNG_RandS(Map->random) % (Map->size.w * Map->size.h);
@@ -438,59 +488,367 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
     return Map;
 }
 
-void MAIN_TileEnergyConst(MAIN_Tile *Tiles, MAIN_Size *Size)
+void MAIN_TileEnergyConst(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size)
 {
-
+    for (MAIN_Tile *TileList = Tiles, *EndTileList = Tiles + Size->w * Size->h; TileList < EndTileList; ++TileList)
+        TileList->energy = Settings->map.maxEnergy;
 }
 
-void MAIN_TileEnergyLinear(MAIN_Tile *Tiles, MAIN_Size *Size)
+void MAIN_TileEnergyCos(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size)
 {
-
+    for (MAIN_Tile *TileList = Tiles, *EndTileList = Tiles + Size->w * Size->h; TileList < EndTileList; ++TileList)
+        TileList->energy = Settings->map.minEnergy + (uint64_t)((double)(Settings->map.maxEnergy - Settings->map.minEnergy) * pow(cos((double)((TileList - Tiles) / Size->w) / (double)Size->h * MAIN_PI), 2.));
 }
 
-void MAIN_TileEnergyCos(MAIN_Tile *Tiles, MAIN_Size *Size)
+void MAIN_TileEnergyCos2(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size)
 {
-
+    for (MAIN_Tile *TileList = Tiles, *EndTileList = Tiles + Size->w * Size->h; TileList < EndTileList; ++TileList)
+        TileList->energy = Settings->map.minEnergy + (uint64_t)((double)(Settings->map.maxEnergy - Settings->map.minEnergy) * pow(cos((double)((TileList - Tiles) / Size->w) / (double)Size->h * 2 * MAIN_PI), 2.));
 }
 
-void MAIN_TileEnergyCos2(MAIN_Tile *Tiles, MAIN_Size *Size)
+uint64_t MAIN_GenerateUint(const MAIN_UintConstraint *Constraint, uint64_t *Random)
 {
-
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
 }
 
-bool MAIN_GenerateGene(MAIN_Settings *Settings, MAIN_Gene *Gene)
+int64_t MAIN_GenerateInt(const MAIN_IntConstraint *Constraint, uint64_t *Random)
 {
-    return true;
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+double MAIN_GenerateFloat(const MAIN_FloatConstraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (double)RNG_RandSf(*Random) * (double)(2 * Constraint->spread);
+}
+
+void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene)
+{
+    MAIN_GenerateUint(&Map->settings->geneConstraints.maxHeight, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.maxSize, &Map->random);
+    MAIN_GenerateFloat(&Map->settings->geneConstraints.efficiency, &Map->random);
+    MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateHeight, &Map->random);
+    MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateSize, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergyHeight, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergySize, &Map->random);
+    MAIN_GenerateFloat(&Map->settings->geneConstraints.spawnRate, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.minSpawnEnergy, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSize, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSpread, &Map->random);
+    MAIN_GenerateFloat(&Map->settings->geneConstraints.mutationRate, &Map->random);
+    MAIN_GenerateUint(&Map->settings->geneConstraints.mutationAttempts, &Map->random);
+}
+
+bool MAIN_TruncateUint(const MAIN_UintConstraint *Constraint, uint64_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateInt(const MAIN_IntConstraint *Constraint, int64_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateFloat(const MAIN_FloatConstraint *Constraint, double *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateGene(const MAIN_Settings *Settings, MAIN_Gene *Gene)
+{
+    bool Return = false;
+
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.maxHeight, &Gene->maxHeight);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.maxSize, &Gene->maxSize);
+    Return |= MAIN_TruncateFloat(&Settings->geneConstraints.efficiency, &Gene->efficiency);
+    Return |= MAIN_TruncateFloat(&Settings->geneConstraints.growthRateHeight, &Gene->growthRateHeight);
+    Return |= MAIN_TruncateFloat(&Settings->geneConstraints.growthRateSize, &Gene->growthRateSize);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.minGrowthEnergyHeight, &Gene->minGrowthEnergyHeight);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.minGrowthEnergySize, &Gene->minGrowthEnergySize);
+    Return |= MAIN_TruncateFloat(&Settings->geneConstraints.spawnRate, &Gene->spawnRate);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.minSpawnEnergy, &Gene->minSpawnEnergy);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.maxTileEnergy, &Gene->maxTileEnergy);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.spawnEnergy, &Gene->spawnEnergy);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.spawnSize, &Gene->spawnSize);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.spawnSpread, &Gene->spawnSpread);
+    Return |= MAIN_TruncateFloat(&Settings->geneConstraints.mutationRate, &Gene->mutationRate);
+    Return |= MAIN_TruncateUint(&Settings->geneConstraints.mutationAttempts, &Gene->mutationAttempts);
+
+    return Return;
 }
 
 bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant)
 {
+    // Allocate new memory
+    MAIN_Plant **NewPlantList = (MAIN_Plant **)realloc(Tile->plantList, sizeof(MAIN_Plant *) * (Tile->plantCount + 1));
+
+    if (NewPlantList == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_ADDTOTILE_REALLOC, strerror(errno), MAIN_ERRORMES_REALLOC, sizeof(MAIN_Plant *) * (Tile->plantCount + 1));
+        return false;
+    }
+
+    Tile->plantList = NewPlantList;
+
+    // Move other plants to find position
+    MAIN_Plant **PlantList = NewPlantList + Tile->plantCount++;
+
+    for (; PlantList > NewPlantList && (*(PlantList - 1))->stats.height < Plant->stats.height; --PlantList)
+        *PlantList = *(PlantList - 1);
+
+    *PlantList = Plant;
+
     return true;
 }
 
-uint64_t MAIN_EnergyUsage(MAIN_Plant *Plant)
+bool MAIN_RemoveFromTile(MAIN_Tile *Tile, const MAIN_Plant *Plant)
+{
+    // Find it in the plant list
+    MAIN_Plant **PlantList = Tile->plantList;
+
+    for (MAIN_Plant **EndPlantList = Tile->plantList + Tile->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
+    {
+        if ((*MiddlePlantList)->stats.height > Plant->stats.height)
+            PlantList = MiddlePlantList;
+
+        else if ((*MiddlePlantList)->stats.height < Plant->stats.height)
+            EndPlantList = MiddlePlantList;
+
+        else
+            break;
+    }
+
+    // Make sure it found it
+    MAIN_Plant **FoundPlant = NULL;
+
+    for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = Tile->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.height == Plant->stats.height; --TempPlantList)
+        if (*TempPlantList == Plant)
+        {
+            FoundPlant = TempPlantList;
+            break;
+        }
+
+    if (FoundPlant == NULL)
+        for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = Tile->plantList + Tile->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.height == Plant->stats.height; ++TempPlantList)
+            if (*TempPlantList == Plant)
+            {
+                FoundPlant = TempPlantList;
+                break;
+            }
+
+    if (FoundPlant == NULL)
+    {
+        _MAIN_SetError(MAIN_ERRORID_REMOVEFROMTILE_INTILE, MAIN_ERRORMES_PLANTINTILE);
+        return false;
+    }
+
+    // Remove it from the list
+    ++FoundPlant;
+
+    for (MAIN_Plant **EndPlantList = Tile->plantList + Tile->plantCount; FoundPlant < EndPlantList; ++FoundPlant)
+        *(FoundPlant - 1) = *FoundPlant;
+
+    // Free the list if needed
+    if (--Tile->plantCount == 0)
+    {
+        free(Tile->plantList);
+        Tile->plantList = NULL;
+    }
+
+    // Realloc
+    else
+        Tile->plantList = (MAIN_Plant **)realloc(Tile->plantList, sizeof(MAIN_Plant *) * Tile->plantCount);
+
+    return true;
+}
+
+bool MAIN_AddToMap(MAIN_Map *Map, MAIN_Plant *Plant)
+{
+    // Allocate new memory
+    MAIN_Plant **NewPlantList = (MAIN_Plant **)realloc(Map->plantList, sizeof(MAIN_Plant *) * (Map->plantCount + 1));
+
+    if (NewPlantList == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_ADDTOMAP_REALLOC, strerror(errno), MAIN_ERRORMES_REALLOC, sizeof(MAIN_Plant *) * (Map->plantCount + 1));
+        return false;
+    }
+
+    Map->plantList = NewPlantList;
+    
+    // Move other plants to find position
+    MAIN_Plant **PlantList = NewPlantList + Map->plantCount++;
+
+    for (; PlantList > NewPlantList && (*(PlantList - 1))->stats.age > Plant->stats.height; --PlantList)
+        *PlantList = *(PlantList - 1);
+
+    *PlantList = Plant;
+
+    return true;
+}
+
+bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
+{
+    MAIN_Plant **PlantList = Map->plantList;
+
+    for (MAIN_Plant **EndPlantList = Map->plantList + Map->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
+    {
+        if ((*MiddlePlantList)->stats.age > Plant->stats.age)
+            EndPlantList = MiddlePlantList;
+
+        else if ((*MiddlePlantList)->stats.age < Plant->stats.age)
+            PlantList = MiddlePlantList;
+
+        else
+            break;
+    }
+
+    // Make sure it found it
+    MAIN_Plant **FoundPlant = NULL;
+
+    for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = Map->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.age == Plant->stats.age; --TempPlantList)
+        if (*TempPlantList == Plant)
+        {
+            FoundPlant = TempPlantList;
+            break;
+        }
+
+    if (FoundPlant == NULL)
+        for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = Map->plantList + Map->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.age == Plant->stats.age; ++TempPlantList)
+            if (*TempPlantList == Plant)
+            {
+                FoundPlant = TempPlantList;
+                break;
+            }
+
+    if (FoundPlant == NULL)
+    {
+        _MAIN_SetError(MAIN_ERRORID_REMOVEFROMMAP_INMAP, MAIN_ERRORMES_PLANTINMAP);
+        return false;
+    }
+
+    // Remove it from the list
+    ++FoundPlant;
+
+    for (MAIN_Plant **EndPlantList = Map->plantList + Map->plantCount; FoundPlant < EndPlantList; ++FoundPlant)
+        *(FoundPlant - 1) = *FoundPlant;
+
+    // Free the list if needed
+    if (--Map->plantCount == 0)
+    {
+        free(Map->plantList);
+        Map->plantList = NULL;
+    }
+
+    // Realloc
+    else
+        Map->plantList = (MAIN_Plant **)realloc(Map->plantList, sizeof(MAIN_Plant *) * Map->plantCount);
+
+    return true;
+}
+
+uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
 {
     return 0;
 }
 
-bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene)
+bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAIN_Gene *ParentGene)
 {
     // Allocate memory
+    MAIN_Plant *Plant = (MAIN_Plant *)malloc(sizeof(MAIN_Plant));
+
+    if (Plant == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_CREATEPLANT_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Plant));
+        return false;
+    }
+
+    MAIN_InitPlant(Plant);
 
     // Set age
+    Plant->stats.age = Map->time;
 
     // Add map to plant
+    Plant->map = Map;
+
+    // Add to map
+    if (!MAIN_AddToMap(Map, Plant))
+    {
+        _MAIN_AddError(MAIN_ERRORID_CREATEPLANT_MAP, MAIN_ERRORMES_ADDTOMAP);
+        MAIN_DestroyPlant(Plant);
+        return false;
+    }
 
     // Copy genes with mutation
+    memcpy((void *)&Plant->gene, (void *)ParentGene, sizeof(MAIN_Gene));
+
+    for (uint64_t Attempt = 0; Attempt < ParentGene->mutationAttempts; ++Attempt)
+        if (RNG_RandSf(Map->random) < ParentGene->mutationRate)
+            *((uint8_t *)&Plant->gene + (RNG_RandS(Map->random) % sizeof(MAIN_Gene))) ^= 1 << (RNG_RandS(Map->random) % sizeof(uint8_t));
+
+    // Make sure it is legal
+    if (MAIN_TruncateGene(Map->settings, &Plant->gene) && Map->settings->killIlligal)
+    {
+        MAIN_DestroyPlant(Plant);
+        return true;
+    }
 
     // Add to tile
+    if (!MAIN_AddToTile(Tile, Plant))
+    {
+        _MAIN_AddError(MAIN_ERRORID_CREATEPLANT_TILE, MAIN_ERRORMES_ADDTOTILE);
+        MAIN_DestroyPlant(Plant);
+        return false;
+    }
 
     // Set energy usage
+    Plant->stats.energyUsage = MAIN_EnergyUsage(Plant);
 
     // Set energy
+    Plant->stats.energy = Energy;
+
+    if (Plant->stats.energy > Plant->stats.maxEnergy)
+        Plant->stats.energy = Plant->stats.maxEnergy;
 
     return true;
 }
+
 
 void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct)
 {
@@ -589,7 +947,7 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->mutationRate.spread = 0.5;
 
     Struct->mutationAttempts.min = 0;
-    Struct->mutationAttempts.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->mutationAttempts.max = 0x100;
     Struct->mutationAttempts.mean = 10;
     Struct->mutationAttempts.spread = 10;
 }
@@ -774,123 +1132,21 @@ void MAIN_CleanPlant(MAIN_Plant *Struct)
     // Remove from tiles
     if (Struct->tileList != NULL)
     {
-        for (MAIN_Tile **TileList = Struct->tileList, **EndTileList = Struct->tileList + Struct->stats.size; TileList < EndTileList; ++TileList)
-        {
-            // Find it in the plant list
-            MAIN_Plant **PlantList = (*TileList)->plantList;
-
-            for (MAIN_Plant **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
-            {
-                if ((*MiddlePlantList)->stats.height > Struct->stats.height)
-                    PlantList = MiddlePlantList;
-
-                else if ((*MiddlePlantList)->stats.height < Struct->stats.height)
-                    EndPlantList = MiddlePlantList;
-
-                else
-                    break;
-            }
-
-            // Make sure it found it
-            MAIN_Plant **FoundPlant = NULL;
-
-            for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = (*TileList)->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.height == Struct->stats.height; --TempPlantList)
-                if (*TempPlantList == Struct)
+        for (MAIN_Tile **TileList = Struct->tileList + Struct->stats.size, **StartTileList = Struct->tileList; TileList >= StartTileList; --TileList)
+            if (*TileList != NULL)
+                if (!MAIN_RemoveFromTile(*TileList, Struct))
                 {
-                    FoundPlant = TempPlantList;
-                    break;
+                    _MAIN_AddError(MAIN_ERRORID_CLEANPLANT_INTILE, MAIN_ERRORMES_REMOVEPLANTFROMTILE);
+                    continue;
                 }
-
-            if (FoundPlant == NULL)
-                for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = (*TileList)->plantList + (*TileList)->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.height == Struct->stats.height; ++TempPlantList)
-                    if (*TempPlantList == Struct)
-                    {
-                        FoundPlant = TempPlantList;
-                        break;
-                    }
-
-            if (FoundPlant == NULL)
-            {
-                _MAIN_AddError(MAIN_ERRORID_CLEANPLANT_INTILE, MAIN_ERRORMES_PLANTINTILE);
-                continue;
-            }
-
-            // Remove it from the list
-            ++FoundPlant;
-
-            for (MAIN_Plant **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount; FoundPlant < EndPlantList; ++FoundPlant)
-                *(FoundPlant - 1) = *FoundPlant;
-
-            // Free the list if needed
-            if (--((*TileList)->plantCount) == 0)
-            {
-                free((*TileList)->plantList);
-                (*TileList)->plantList = NULL;
-            }
-
-            // Realloc
-            else
-                (*TileList)->plantList = realloc((*TileList)->plantList, sizeof(MAIN_Plant *) * (*TileList)->plantCount);
-        }
 
         free(Struct->tileList);
     }
 
     // Remove it from the map list
-    MAIN_Plant **PlantList = Struct->map->plantList;
-
-    for (MAIN_Plant **EndPlantList = Struct->map->plantList + Struct->map->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
-    {
-        if ((*MiddlePlantList)->stats.age > Struct->stats.age)
-            EndPlantList = MiddlePlantList;
-
-        else if ((*MiddlePlantList)->stats.age < Struct->stats.age)
-            PlantList = MiddlePlantList;
-
-        else
-            break;
-    }
-
-    // Make sure it found it
-    MAIN_Plant **FoundPlant = NULL;
-
-    for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = Struct->map->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.age == Struct->stats.age; --TempPlantList)
-        if (*TempPlantList == Struct)
-        {
-            FoundPlant = TempPlantList;
-            break;
-        }
-
-    if (FoundPlant == NULL)
-        for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = Struct->map->plantList + Struct->map->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.age == Struct->stats.age; ++TempPlantList)
-            if (*TempPlantList == Struct)
-            {
-                FoundPlant = TempPlantList;
-                break;
-            }
-
-    if (FoundPlant == NULL)
-        _MAIN_AddError(MAIN_ERRORID_CLEANPLANT_INMAP, MAIN_ERRORMES_PLANTINMAP);
-
-    else
-    {
-        // Remove it from the list
-        ++FoundPlant;
-
-        for (MAIN_Plant **EndPlantList = Struct->map->plantList + Struct->map->plantCount; FoundPlant < EndPlantList; ++FoundPlant)
-            *(FoundPlant - 1) = *FoundPlant;
-
-        // Free the list if needed
-        if (--(Struct->map->plantCount) == 0)
-        {
-            free(Struct->map->plantList);
-            Struct->map->plantList = NULL;
-        }
-
-        // Realloc
-        else
-            Struct->map->plantList = realloc(Struct->map->plantList, sizeof(MAIN_Plant *) * Struct->map->plantCount);
-    }
+    if (Struct->map != NULL)
+        if (!MAIN_RemoveFromMap(Struct->map, Struct))
+            _MAIN_AddError(MAIN_ERRORID_CLEANPLANT_INMAP, MAIN_ERRORMES_REMOVEPLANTFROMMAP);
 
     // Clean stats
     MAIN_CleanPlantStats(&Struct->stats);
@@ -1014,6 +1270,13 @@ int main(int argc, char **argv)
         printf("Unable to create map: %s\n", MAIN_GetError());
         return -1;
     }
+
+    // Check the tile energy
+    /*for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; TileList += Map->size.w)
+        printf("TileEnergy: %u\n", TileList->energy);*/
+
+    // Print the number of plants
+    printf("PlantCount: %lu\n", Map->plantCount);
 
     // Clean up
     MAIN_DestroyMap(Map);

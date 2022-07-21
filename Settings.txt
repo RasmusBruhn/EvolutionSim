@@ -1,4 +1,4 @@
-killIlligal = true;
+killIlligal = false;
 
 map = {
     width = 1024;
@@ -115,7 +115,7 @@ geneConstraints = {
 
     mutationAttempts = {
         min = 0;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 100;
         mean = 10;
         spread = 10;
     };
