@@ -1384,6 +1384,7 @@ int main(int argc, char **argv)
     /*for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
         printf("EnergyUsage: %llu\n", (*PlantList)->stats.energyUsage);*/
     printf("%llu, %llu, %llu, %llu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
+
     // Clean up
     MAIN_DestroyMap(Map);
     MAIN_DestroySettings(Settings);
