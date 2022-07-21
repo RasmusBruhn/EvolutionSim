@@ -30,7 +30,9 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_CREATEPLANT_TILE = 0x00040201,
     MAIN_ERRORID_CREATEPLANT_MAP = 0x00040202,
     MAIN_ERRORID_REMOVEFROMTILE_INTILE = 0x00050200,
+    MAIN_ERRORID_REMOVEFROMTILE_PLANTLIST = 0x00050201,
     MAIN_ERRORID_REMOVEFROMMAP_INMAP = 0x00060200,
+    MAIN_ERRORID_REMOVEFROMMAP_PLANTLIST = 0x00060201,
     MAIN_ERRORID_ADDTOTILE_REALLOC = 0x00070200,
     MAIN_ERRORID_ADDTOMAP_REALLOC = 0x00080200
 };
@@ -49,6 +51,7 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_ADDTOMAP "Unable to add plant to map"
 #define MAIN_ERRORMES_REMOVEPLANTFROMTILE "Unable to remove plant from tile"
 #define MAIN_ERRORMES_REMOVEPLANTFROMMAP "Unable to remove plant from map"
+#define MAIN_ERRORMES_NULLPLANTLIST "Plant list is NULL"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -469,15 +472,17 @@ MAIN_Map *MAIN_CreateMap(const MAIN_Settings *Settings)
     for (uint64_t Var = 0; Var < Settings->init.count; ++Var)
     {
         // Generate the gene
-        MAIN_Gene *Gene;
+        MAIN_Gene Gene;
 
-        MAIN_GenerateGene(Map, Gene);
+        MAIN_GenerateGene(Map, &Gene);
+
+        MAIN_TruncateGene(Settings, &Gene);
 
         // Find the tile
         MAIN_Tile *Tile = Map->tiles + RNG_RandS(Map->random) % (Map->size.w * Map->size.h);
 
         // Create the plant
-        if (!MAIN_CreatePlant(Map, Tile, Settings->init.energy, Gene))
+        if (!MAIN_CreatePlant(Map, Tile, Settings->init.energy, &Gene))
         {
             _MAIN_AddError(MAIN_ERRORID_CREATEMAP_CREATEPLANT, MAIN_ERRORMES_GENERATEPLANT, Var);
             MAIN_DestroyMap(Map);
@@ -518,26 +523,26 @@ int64_t MAIN_GenerateInt(const MAIN_IntConstraint *Constraint, uint64_t *Random)
 
 double MAIN_GenerateFloat(const MAIN_FloatConstraint *Constraint, uint64_t *Random)
 {
-    return Constraint->mean - Constraint->spread + (double)RNG_RandSf(*Random) * (double)(2 * Constraint->spread);
+    return Constraint->mean - Constraint->spread + RNG_RandSf(*Random) * (double)(2 * Constraint->spread);
 }
 
 void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene)
 {
-    MAIN_GenerateUint(&Map->settings->geneConstraints.maxHeight, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.maxSize, &Map->random);
-    MAIN_GenerateFloat(&Map->settings->geneConstraints.efficiency, &Map->random);
-    MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateHeight, &Map->random);
-    MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateSize, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergyHeight, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergySize, &Map->random);
-    MAIN_GenerateFloat(&Map->settings->geneConstraints.spawnRate, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.minSpawnEnergy, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSize, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSpread, &Map->random);
-    MAIN_GenerateFloat(&Map->settings->geneConstraints.mutationRate, &Map->random);
-    MAIN_GenerateUint(&Map->settings->geneConstraints.mutationAttempts, &Map->random);
+    Gene->maxHeight = MAIN_GenerateUint(&Map->settings->geneConstraints.maxHeight, &Map->random);
+    Gene->maxSize = MAIN_GenerateUint(&Map->settings->geneConstraints.maxSize, &Map->random);
+    Gene->efficiency = MAIN_GenerateFloat(&Map->settings->geneConstraints.efficiency, &Map->random);
+    Gene->growthRateHeight = MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateHeight, &Map->random);
+    Gene->growthRateSize = MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateSize, &Map->random);
+    Gene->minGrowthEnergyHeight = MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergyHeight, &Map->random);
+    Gene->minGrowthEnergySize = MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergySize, &Map->random);
+    Gene->spawnRate = MAIN_GenerateFloat(&Map->settings->geneConstraints.spawnRate, &Map->random);
+    Gene->minSpawnEnergy = MAIN_GenerateUint(&Map->settings->geneConstraints.minSpawnEnergy, &Map->random);
+    Gene->maxTileEnergy = MAIN_GenerateUint(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
+    Gene->spawnEnergy = MAIN_GenerateUint(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
+    Gene->spawnSize = MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSize, &Map->random);
+    Gene->spawnSpread = MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSpread, &Map->random);
+    Gene->mutationRate = MAIN_GenerateFloat(&Map->settings->geneConstraints.mutationRate, &Map->random);
+    Gene->mutationAttempts = MAIN_GenerateUint(&Map->settings->geneConstraints.mutationAttempts, &Map->random);
 }
 
 bool MAIN_TruncateUint(const MAIN_UintConstraint *Constraint, uint64_t *Value)
@@ -643,6 +648,12 @@ bool MAIN_RemoveFromTile(MAIN_Tile *Tile, const MAIN_Plant *Plant)
     // Find it in the plant list
     MAIN_Plant **PlantList = Tile->plantList;
 
+    if (PlantList == NULL)
+    {
+        _MAIN_SetError(MAIN_ERRORID_REMOVEFROMTILE_PLANTLIST, MAIN_ERRORMES_NULLPLANTLIST);
+        return false;
+    }
+
     for (MAIN_Plant **EndPlantList = Tile->plantList + Tile->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
     {
         if ((*MiddlePlantList)->stats.height > Plant->stats.height)
@@ -726,6 +737,12 @@ bool MAIN_AddToMap(MAIN_Map *Map, MAIN_Plant *Plant)
 bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
 {
     MAIN_Plant **PlantList = Map->plantList;
+
+    if (PlantList == NULL)
+    {
+        _MAIN_SetError(MAIN_ERRORID_REMOVEFROMMAP_PLANTLIST, MAIN_ERRORMES_NULLPLANTLIST);
+        return false;
+    }
 
     for (MAIN_Plant **EndPlantList = Map->plantList + Map->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
     {
@@ -1100,7 +1117,7 @@ void MAIN_CleanMap(MAIN_Map *Struct)
 {
     // Destroy remaining plants
     if (Struct->plantList != NULL)
-        for (MAIN_Plant **PlantList = Struct->plantList + Struct->plantCount - 1, **StartPlantList = Struct->plantList; PlantList >= StartPlantList; ++PlantList)
+        for (MAIN_Plant **PlantList = Struct->plantList + Struct->plantCount - 1, **StartPlantList = Struct->plantList; PlantList >= StartPlantList; --PlantList)
             if (*PlantList != NULL)
                 MAIN_DestroyPlant(*PlantList);
 
