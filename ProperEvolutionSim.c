@@ -61,6 +61,7 @@ typedef struct __MAIN_IntConstraint MAIN_IntConstraint;
 typedef struct __MAIN_FloatConstraint MAIN_FloatConstraint;
 typedef struct __MAIN_MapSettings MAIN_MapSettings;
 typedef struct __MAIN_InitialSettings MAIN_InitialSettings;
+typedef struct __MAIN_EnergySettings MAIN_EnergySettings;
 typedef struct __MAIN_Size MAIN_Size;
 typedef struct __MAIN_Map MAIN_Map;
 typedef struct __MAIN_Tile MAIN_Tile;
@@ -121,10 +122,22 @@ struct __MAIN_InitialSettings {
     uint64_t energy; // The starting energy of all the initial plants
 };
 
+struct __MAIN_EnergySettings {
+    double storageRate; // The rate of energy loss due to storage
+    double storagePow; // The power of the storage loss
+    double baseRate; // The rate of energy loss due to the base loss
+    double heightPow; // The power of the height loss
+    double sizePow; // The power of the size loss
+    double effPow; // The power of the efficiency loss
+    double growthBase; // The energy used in base growth
+    double growthStorage; // The energy used in storage growth
+};
+
 struct __MAIN_Settings {
     MAIN_GeneConstraints geneConstraints; // All the gene constraints
     MAIN_MapSettings map;                 // All the map settings
     MAIN_InitialSettings init;            // The settings for the initial population
+    MAIN_EnergySettings energy;           // The settings for the energy usage
     bool killIlligal;                     // If true then it should kill any plant created with illigal genes, if false they should be trunctated
 };
 
@@ -174,6 +187,7 @@ struct __MAIN_PlantStats {
     uint64_t age; // At what random tick it was born
     uint64_t energyUsage; // The amount of energy to use per turn
     uint64_t maxEnergy; // The maximum amount of energy the plant can store
+    uint64_t biomass; // The biomass of the plant
 };
 
 struct __MAIN_Plant {
@@ -186,9 +200,10 @@ struct __MAIN_Plant {
 // Settings translation tables
 #define MAIN_SETTINGSCONSTRAINTCOUNT 4
 #define MAIN_SETTINGSGENECONSTRAINTCOUNT 15
-#define MAIN_SETTINGSCOUNT 4
+#define MAIN_SETTINGSCOUNT 5
 #define MAIN_SETTINGSMAPCOUNT 5
 #define MAIN_SETTINGSINITCOUNT 3
+#define MAIN_SETTINGSENERGYCOUNT 8
 
 SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, min)},
@@ -243,10 +258,22 @@ SET_TranslationTable MAIN_SettingsTableInit[MAIN_SETTINGSINITCOUNT] = {
     {.name = "energy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, energy)}
 };
 
+SET_TranslationTable MAIN_SettingsTableEnergy[MAIN_SETTINGSENERGYCOUNT] = {
+    {.name = "storageRate", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, storageRate)},
+    {.name = "storagePow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, storagePow)},
+    {.name = "baseRate", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, baseRate)},
+    {.name = "heightPow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, heightPow)},
+    {.name = "sizePow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, sizePow)},
+    {.name = "effPow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, effPow)},
+    {.name = "growthBase", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthBase)},
+    {.name = "growthStorage", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthStorage)}
+};
+
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
     {.name = "geneConstraints", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, geneConstraints), .size = sizeof(MAIN_GeneConstraints), .sub = MAIN_SettingsTableGeneConstrains, .count = MAIN_SETTINGSGENECONSTRAINTCOUNT},
     {.name = "map", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, map), .size = sizeof(MAIN_MapSettings), .sub = MAIN_SettingsTableMap, .count = MAIN_SETTINGSMAPCOUNT},
     {.name = "init", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, init), .size = sizeof(MAIN_InitialSettings), .sub = MAIN_SettingsTableInit, .count = MAIN_SETTINGSINITCOUNT},
+    {.name = "energy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, energy), .size = sizeof(MAIN_EnergySettings), .sub = MAIN_SettingsTableEnergy, .count = MAIN_SETTINGSENERGYCOUNT},
     {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)}
 };
 
@@ -316,6 +343,10 @@ bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant);
 // Calculates the energy usage of a plant
 uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant);
 
+// Calculates the biomass for a plant
+uint64_t MAIN_Biomass(const MAIN_Plant *Plant);
+
+
 // Init functions
 void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct);
 void MAIN_InitIntConstraint(MAIN_IntConstraint *Struct);
@@ -323,6 +354,7 @@ void MAIN_InitFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_InitMapSettings(MAIN_MapSettings *Struct);
 void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct);
+void MAIN_InitEnergySettings(MAIN_EnergySettings *Struct);
 void MAIN_InitSettings(MAIN_Settings *Struct);
 void MAIN_InitMap(MAIN_Map *Struct);
 void MAIN_InitTile(MAIN_Tile *Struct);
@@ -338,6 +370,7 @@ void MAIN_CleanFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct);
 void MAIN_CleanInitialSettings(MAIN_InitialSettings *Struct);
+void MAIN_CleanEnergySettings(MAIN_EnergySettings *Struct);
 void MAIN_CleanSettings(MAIN_Settings *Struct);
 void MAIN_CleanMap(MAIN_Map *Struct);
 void MAIN_CleanTile(MAIN_Tile *Struct);
@@ -353,6 +386,7 @@ void MAIN_DestroyFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_DestroyGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_DestroyMapSettings(MAIN_MapSettings *Struct);
 void MAIN_DestroyInitialSettings(MAIN_InitialSettings *Struct);
+void MAIN_DestroyEnergySettings(MAIN_EnergySettings *Struct);
 void MAIN_DestroySettings(MAIN_Settings *Struct);
 void MAIN_DestroyMap(MAIN_Map *Struct);
 void MAIN_DestroyTile(MAIN_Tile *Struct);
@@ -640,6 +674,14 @@ bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant)
 
     *PlantList = Plant;
 
+    // Update size
+    ++Plant->stats.size;
+
+    // Update energy stats
+    Plant->stats.maxEnergy = Plant->stats.size * Plant->gene.maxTileEnergy;
+    Plant->stats.energyUsage = MAIN_EnergyUsage(Plant);
+    Plant->stats.biomass = MAIN_Biomass(Plant);
+
     return true;
 }
 
@@ -802,7 +844,9 @@ bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
 
 uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
 {
-    return 0;
+    uint64_t StorageEnergy = (uint64_t)(Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow));
+    uint64_t BaseEnergy = (uint64_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp((double)Plant->gene.efficiency * Plant->map->settings->energy.effPow));
+    return StorageEnergy + BaseEnergy;
 }
 
 bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAIN_Gene *ParentGene)
@@ -859,11 +903,20 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAI
 
     // Set energy
     Plant->stats.energy = Energy;
-
+printf("Energy: %f/%f - %u", (double)Plant->stats.energy, (double)Plant->stats.maxEnergy, (uint64_t)Plant->stats.energy > (uint64_t)Plant->stats.maxEnergy);
     if (Plant->stats.energy > Plant->stats.maxEnergy)
-        Plant->stats.energy = Plant->stats.maxEnergy;
+    {printf(" Test");
+        Plant->stats.energy = Plant->stats.maxEnergy;}
+printf(" Energy: %lu/%lu\n", Plant->stats.energy, Plant->stats.maxEnergy);
 
     return true;
+}
+
+uint64_t MAIN_Biomass(const MAIN_Plant *Plant)
+{
+    uint64_t StorageSize = (uint64_t)((double)Plant->stats.maxEnergy * Plant->map->settings->energy.growthStorage);
+    uint64_t BaseSize = (uint64_t)((double)(Plant->stats.height * Plant->stats.size) * exp((double)Plant->gene.efficiency * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
+    return StorageSize + BaseSize;
 }
 
 
@@ -988,11 +1041,24 @@ void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct)
     Struct->seed = time(NULL);
 }
 
+void MAIN_InitEnergySettings(MAIN_EnergySettings *Struct)
+{
+    Struct->storageRate = 1e-2;
+    Struct->storagePow = 1.;
+    Struct->baseRate = 1.;
+    Struct->heightPow = 1.;
+    Struct->sizePow = 0.5;
+    Struct->effPow = 1.;
+    Struct->growthBase = 100.;
+    Struct->growthStorage = 1.;
+}
+
 void MAIN_InitSettings(MAIN_Settings *Struct)
 {
     MAIN_InitGeneConstraints(&Struct->geneConstraints);
     MAIN_InitMapSettings(&Struct->map);
     MAIN_InitInitialSettings(&Struct->init);
+    MAIN_InitEnergySettings(&Struct->energy);
     Struct->killIlligal = true;
 }
 
@@ -1104,6 +1170,11 @@ void MAIN_CleanInitialSettings(MAIN_InitialSettings *Struct)
 
 }
 
+void MAIN_CleanEnergySettings(MAIN_EnergySettings *Struct)
+{
+
+}
+
 void MAIN_CleanSettings(MAIN_Settings *Struct)
 {
     // Clean gene constraints
@@ -1111,6 +1182,12 @@ void MAIN_CleanSettings(MAIN_Settings *Struct)
 
     // Clean map settings
     MAIN_CleanMapSettings(&Struct->map);
+
+    // Clean init
+    MAIN_CleanInitialSettings(&Struct->init);
+
+    // Clean energy
+    MAIN_CleanEnergySettings(&Struct->energy);
 }
 
 void MAIN_CleanMap(MAIN_Map *Struct)
@@ -1224,6 +1301,12 @@ void MAIN_DestroyInitialSettings(MAIN_InitialSettings *Struct)
     free(Struct);
 }
 
+void MAIN_DestroyEnergySettings(MAIN_EnergySettings *Struct)
+{
+    MAIN_CleanEnergySettings(Struct);
+    free(Struct);
+}
+
 void MAIN_DestroySettings(MAIN_Settings *Struct)
 {
     MAIN_CleanSettings(Struct);
@@ -1290,11 +1373,15 @@ int main(int argc, char **argv)
 
     // Check the tile energy
     /*for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; TileList += Map->size.w)
-        printf("TileEnergy: %u\n", TileList->energy);*/
+        printf("TileEnergy: %lu\n", TileList->energy);*/
 
     // Print the number of plants
-    printf("PlantCount: %lu\n", Map->plantCount);
+    printf("InitialPlantCount: %lu\n", Map->plantCount);
 
+    // Print energy usage
+    /*for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+        printf("EnergyUsage: %lu\n", (*PlantList)->stats.energyUsage);*/
+    printf("%lu, %lu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy);
     // Clean up
     MAIN_DestroyMap(Map);
     MAIN_DestroySettings(Settings);

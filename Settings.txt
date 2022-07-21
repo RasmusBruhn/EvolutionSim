@@ -1,8 +1,8 @@
 killIlligal = true;
 
 map = {
-    width = 1024;
-    height = 1024;
+    width = 1;
+    height = 1;
     minEnergy = 1000;
     maxEnergy = 10000;
     energyMethod = "const";
@@ -12,6 +12,17 @@ init = {
     count = 100;
     seed = 42;
     energy = 10000;
+};
+
+energy = {
+    storageRate = 1e-2;
+    storagePow = 1.;
+    baseRate = 1.;
+    heightPow = 1.;
+    sizePow = 0.5;
+    effPow = 1.;
+    growthBase = 100.;
+    growthStorage = 1.;
 };
 
 geneConstraints = {
