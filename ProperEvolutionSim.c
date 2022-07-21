@@ -37,13 +37,13 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_ADDTOMAP_REALLOC = 0x00080200
 };
 
-#define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %lu)"
-#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %lu)"
+#define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %llu)"
+#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %llu)"
 #define MAIN_ERRORMES_LOADSETTINGS "Unable to load settings (FileName: %s)"
 #define MAIN_ERRORMES_TRANSLATESETTINGS "Unable to translate settings (FileName: %s)"
 #define MAIN_ERRORMES_PLANTINTILE "Unable to locate plant in tiles plant list"
 #define MAIN_ERRORMES_PLANTINMAP "Unable to locate plant in maps plant list"
-#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %lu)"
+#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %llu)"
 #define MAIN_ERRORMES_ENERGYMETHOD "Uknown energy method (Method: %s)"
 #define MAIN_ERRORMES_LOWWIDTH "The width of the map is too low"
 #define MAIN_ERRORMES_LOWHEIGHT "The height of the map is too low"
@@ -903,11 +903,9 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAI
 
     // Set energy
     Plant->stats.energy = Energy;
-printf("Energy: %f/%f - %u", (double)Plant->stats.energy, (double)Plant->stats.maxEnergy, (uint64_t)Plant->stats.energy > (uint64_t)Plant->stats.maxEnergy);
+
     if (Plant->stats.energy > Plant->stats.maxEnergy)
-    {printf(" Test");
-        Plant->stats.energy = Plant->stats.maxEnergy;}
-printf(" Energy: %lu/%lu\n", Plant->stats.energy, Plant->stats.maxEnergy);
+        Plant->stats.energy = Plant->stats.maxEnergy;
 
     return true;
 }
@@ -1373,15 +1371,15 @@ int main(int argc, char **argv)
 
     // Check the tile energy
     /*for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; TileList += Map->size.w)
-        printf("TileEnergy: %lu\n", TileList->energy);*/
+        printf("TileEnergy: %llu\n", TileList->energy);*/
 
     // Print the number of plants
-    printf("InitialPlantCount: %lu\n", Map->plantCount);
+    printf("InitialPlantCount: %llu\n", Map->plantCount);
 
     // Print energy usage
     /*for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
-        printf("EnergyUsage: %lu\n", (*PlantList)->stats.energyUsage);*/
-    printf("%lu, %lu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy);
+        printf("EnergyUsage: %llu\n", (*PlantList)->stats.energyUsage);*/
+    printf("%llu, %llu, %llu, %llu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
     // Clean up
     MAIN_DestroyMap(Map);
     MAIN_DestroySettings(Settings);
