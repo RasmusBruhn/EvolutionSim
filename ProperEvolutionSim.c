@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <time.h>
 #include <math.h>
 #include <Random.h>
 #include <Settings.h>
@@ -19,6 +20,9 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_LOADSETTINGS_TRANSLATE = 0x00010202,
     MAIN_ERRORID_CREATEMAP_MALLOC = 0x00020200,
     MAIN_ERRORID_CREATEMAP_MALLOCTILES = 0x00020201,
+    MAIN_ERRORID_CREATEMAP_GENGENE = 0x00020202,
+    MAIN_ERRORID_CREATEMAP_CREATEPLANT = 0x00020203,
+    MAIN_ERRORID_CREATEMAP_TILEENERGY = 0x00020204,
     MAIN_ERRORID_CLEANPLANT_INTILE = 0x00010100,
     MAIN_ERRORID_CLEANPLANT_INMAP = 0x00010101
 };
@@ -28,6 +32,9 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_TRANSLATESETTINGS "Unable to translate settings (FileName: %s)"
 #define MAIN_ERRORMES_PLANTINTILE "Unable to locate plant in tiles plant list"
 #define MAIN_ERRORMES_PLANTINMAP "Unable to locate plant in maps plant list"
+#define MAIN_ERRORMES_GENERATEGENE "Unable to generate gene (ID: %lu)"
+#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %lu)"
+#define MAIN_ERRORMES_ENERGYMETHOD "Uknown energy method (Method: %s)"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -88,10 +95,13 @@ struct __MAIN_MapSettings {
     uint64_t height; // The height of the map
     uint64_t minEnergy; // The minimum energy production per tile
     uint64_t maxEnergy; // The maximum energy production per tile
+    char *energyMethod; // The method to calculate the energy
 };
 
 struct __MAIN_InitialSettings {
     uint64_t count; // The number of plant to create at the beginning
+    uint64_t seed; // The seed for the simulation
+    uint64_t energy; // The starting energy of all the initial plants
 };
 
 struct __MAIN_Settings {
@@ -113,6 +123,7 @@ struct __MAIN_Map {
     MAIN_Plant **plantList; // A list with all of the plants on the map with the oldest first
     size_t plantCount; // The number of plants in the plant list
     uint64_t time; // The tick counter which keeps going up
+    uint64_t random; // A random number used to generate more random numbers
 };
 
 struct __MAIN_Tile {
@@ -159,8 +170,8 @@ struct __MAIN_Plant {
 #define MAIN_SETTINGSCONSTRAINTCOUNT 4
 #define MAIN_SETTINGSGENECONSTRAINTCOUNT 15
 #define MAIN_SETTINGSCOUNT 4
-#define MAIN_SETTINGSMAPCOUNT 4
-#define MAIN_SETTINGSINITCOUNT 1
+#define MAIN_SETTINGSMAPCOUNT 5
+#define MAIN_SETTINGSINITCOUNT 3
 
 SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, min)},
@@ -205,11 +216,14 @@ SET_TranslationTable MAIN_SettingsTableMap[MAIN_SETTINGSMAPCOUNT] = {
     {.name = "width", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, width)},
     {.name = "height", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, height)},
     {.name = "minEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, minEnergy)},
-    {.name = "maxEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)}
+    {.name = "maxEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)},
+    {.name = "energyMethod", .type = SET_DATATYPE_STR, .depth = 0, .offset = offsetof(MAIN_MapSettings, energyMethod)}
 };
 
 SET_TranslationTable MAIN_SettingsTableInit[MAIN_SETTINGSINITCOUNT] = {
-    {.name = "count", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, count)}
+    {.name = "count", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, count)},
+    {.name = "seed", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, seed)},
+    {.name = "energy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, energy)}
 };
 
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
@@ -219,6 +233,12 @@ SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
     {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)}
 };
 
+// Energy method names
+#define MAIN_ENERGYMETHOD_CONST "const"
+#define MAIN_ENERGYMETHOD_LINEAR "linear"
+#define MAIN_ENERGYMETHOD_COS "cos"
+#define MAIN_ENERGYMETHOD_COS2 "cos2"
+
 // Functions
 // Load a settings file
 MAIN_Settings *MAIN_LoadSettings(const char *FileName);
@@ -226,11 +246,26 @@ MAIN_Settings *MAIN_LoadSettings(const char *FileName);
 // Create a new map
 MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings);
 
+// Calculates the energy of the tiles using const method
+void MAIN_TileEnergyConst(MAIN_Tile *Tiles, MAIN_Size *Size);
+
+// Calculates the energy of the tiles using linear method
+void MAIN_TileEnergyLinear(MAIN_Tile *Tiles, MAIN_Size *Size);
+
+// Calculates the energy of the tiles using single period cos method
+void MAIN_TileEnergyCos(MAIN_Tile *Tiles, MAIN_Size *Size);
+
+// Calculates the energy of the tiles using double period cos method
+void MAIN_TileEnergyCos2(MAIN_Tile *Tiles, MAIN_Size *Size);
+
+// Generate a random gene
+bool MAIN_GenerateGene(MAIN_Settings *Settings, MAIN_Gene *Gene);
+
 // Create a plant and mutates the parent genes for it
-bool *MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene);
+bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene);
 
 // Adds a plant to a tile
-bool *MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant);
+bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant);
 
 // Calculates the energy usage of a plant
 uint64_t MAIN_EnergyUsage(MAIN_Plant *Plant);
@@ -352,12 +387,93 @@ MAIN_Map *MAIN_CreateMap(MAIN_Settings *Settings)
     for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; ++TileList)
         MAIN_InitTile(TileList);
 
+    // Set energy of tiles
+    if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_CONST) == 0)
+        MAIN_TileEnergyConst(Map->tiles, &Map->size);
+    
+    else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_LINEAR) == 0)
+        MAIN_TileEnergyLinear(Map->tiles, &Map->size);
+        
+    else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_COS) == 0)
+        MAIN_TileEnergyCos(Map->tiles, &Map->size);    
+
+    else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_COS2) == 0)
+        MAIN_TileEnergyCos2(Map->tiles, &Map->size);
+    
+    else
+    {
+        _MAIN_SetError(MAIN_ERRORID_CREATEMAP_TILEENERGY, MAIN_ERRORMES_ENERGYMETHOD, Settings->map.energyMethod);
+        MAIN_DestroyMap(Map);
+        return NULL;
+    }
+
+    // Set the random number
+    Map->random = Settings->init.seed;
+
     // Populate with random plants
+    for (uint64_t Var = 0; Var < Settings->init.count; ++Var)
+    {
+        // Generate the gene
+        MAIN_Gene *Gene;
+
+        if (!MAIN_GenerateGene(Settings, Gene))
+        {
+            _MAIN_AddError(MAIN_ERRORID_CREATEMAP_GENGENE, MAIN_ERRORMES_GENERATEGENE, Var);
+            MAIN_DestroyMap(Map);
+            return NULL;
+        }
+
+        // Find the tile
+        MAIN_Tile *Tile = Map->tiles + RNG_RandS(Map->random) % (Map->size.w * Map->size.h);
+
+        // Create the plant
+        if (!MAIN_CreatePlant(Map, Tile, Settings->init.energy, Gene))
+        {
+            _MAIN_AddError(MAIN_ERRORID_CREATEMAP_CREATEPLANT, MAIN_ERRORMES_GENERATEPLANT, Var);
+            MAIN_DestroyMap(Map);
+            return NULL;
+        }
+    }
 
     return Map;
 }
 
-bool *MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene)
+void MAIN_TileEnergyConst(MAIN_Tile *Tiles, MAIN_Size *Size)
+{
+
+}
+
+void MAIN_TileEnergyLinear(MAIN_Tile *Tiles, MAIN_Size *Size)
+{
+
+}
+
+void MAIN_TileEnergyCos(MAIN_Tile *Tiles, MAIN_Size *Size)
+{
+
+}
+
+void MAIN_TileEnergyCos2(MAIN_Tile *Tiles, MAIN_Size *Size)
+{
+
+}
+
+bool MAIN_GenerateGene(MAIN_Settings *Settings, MAIN_Gene *Gene)
+{
+    return true;
+}
+
+bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant)
+{
+    return true;
+}
+
+uint64_t MAIN_EnergyUsage(MAIN_Plant *Plant)
+{
+    return 0;
+}
+
+bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gene *ParentGene)
 {
     // Allocate memory
 
@@ -372,8 +488,9 @@ bool *MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, MAIN_Gen
     // Set energy usage
 
     // Set energy
-}
 
+    return true;
+}
 
 void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct)
 {
@@ -483,11 +600,17 @@ void MAIN_InitMapSettings(MAIN_MapSettings *Struct)
     Struct->width = 1024;
     Struct->minEnergy = 1000;
     Struct->maxEnergy = 10000;
-}
+    Struct->energyMethod = (char *)malloc(sizeof(char) * (strlen(MAIN_ENERGYMETHOD_CONST) + 1));
+    
+    if (Struct->energyMethod != NULL)
+        strcpy(Struct->energyMethod, MAIN_ENERGYMETHOD_CONST);
+}   
 
 void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct)
 {
     Struct->count = 1000;
+    Struct->energy = 10000;
+    Struct->seed = time(NULL);
 }
 
 void MAIN_InitSettings(MAIN_Settings *Struct)
@@ -506,6 +629,7 @@ void MAIN_InitMap(MAIN_Map *Struct)
     Struct->plantList = NULL;
     Struct->plantCount = 0;
     Struct->time = 0;
+    Struct->random = 0;
 }
 
 void MAIN_InitTile(MAIN_Tile *Struct)
@@ -596,7 +720,8 @@ void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct)
 
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct)
 {
-
+    if (Struct->energyMethod != NULL)
+        free(Struct->energyMethod);
 }
 
 void MAIN_CleanInitialSettings(MAIN_InitialSettings *Struct)

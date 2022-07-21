@@ -5,10 +5,13 @@ map = {
     height = 1024;
     minEnergy = 1000;
     maxEnergy = 10000;
+    energyMethod = "const";
 };
 
 init = {
     count = 1000;
+    seed = 42;
+    energy = 10000;
 };
 
 geneConstraints = {
