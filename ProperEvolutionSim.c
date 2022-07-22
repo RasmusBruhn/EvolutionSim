@@ -42,13 +42,13 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_GROWSIZE = 0x00090203
 };
 
-#define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %lu)"
-#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %lu)"
+#define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
+#define MAIN_ERRORMES_REALLOC "Unable to reallocate memory (Size: %u)"
 #define MAIN_ERRORMES_LOADSETTINGS "Unable to load settings (FileName: %s)"
 #define MAIN_ERRORMES_TRANSLATESETTINGS "Unable to translate settings (FileName: %s)"
 #define MAIN_ERRORMES_PLANTINTILE "Unable to locate plant in tiles plant list"
 #define MAIN_ERRORMES_PLANTINMAP "Unable to locate plant in maps plant list"
-#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %lu)"
+#define MAIN_ERRORMES_GENERATEPLANT "Unable to generate plant (ID: %u)"
 #define MAIN_ERRORMES_ENERGYMETHOD "Uknown energy method (Method: %s)"
 #define MAIN_ERRORMES_LOWWIDTH "The width of the map is too low"
 #define MAIN_ERRORMES_LOWHEIGHT "The height of the map is too low"
@@ -64,8 +64,14 @@ enum MAIN_ErrorID {
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
 typedef struct __MAIN_GeneConstraints MAIN_GeneConstraints;
-typedef struct __MAIN_UintConstraint MAIN_UintConstraint;
-typedef struct __MAIN_IntConstraint MAIN_IntConstraint;
+typedef struct __MAIN_Uint64Constraint MAIN_Uint64Constraint;
+typedef struct __MAIN_Int64Constraint MAIN_Int64Constraint;
+typedef struct __MAIN_Uint32Constraint MAIN_Uint32Constraint;
+typedef struct __MAIN_Int32Constraint MAIN_Int32Constraint;
+typedef struct __MAIN_Uint16Constraint MAIN_Uint16Constraint;
+typedef struct __MAIN_Int16Constraint MAIN_Int16Constraint;
+typedef struct __MAIN_Uint8Constraint MAIN_Uint8Constraint;
+typedef struct __MAIN_Int8Constraint MAIN_Int8Constraint;
 typedef struct __MAIN_FloatConstraint MAIN_FloatConstraint;
 typedef struct __MAIN_MapSettings MAIN_MapSettings;
 typedef struct __MAIN_InitialSettings MAIN_InitialSettings;
@@ -77,18 +83,60 @@ typedef struct __MAIN_Plant MAIN_Plant;
 typedef struct __MAIN_Gene MAIN_Gene;
 typedef struct __MAIN_PlantStats MAIN_PlantStats;
 
-struct __MAIN_UintConstraint {
+struct __MAIN_Uint64Constraint {
     uint64_t min;    // The minimum allowed value
     uint64_t max;    // The maximum allowed value
     uint64_t mean;   // The mean starting value
     uint64_t spread; // The spread of the starting value
 };
 
-struct __MAIN_IntConstraint {
+struct __MAIN_Int64Constraint {
     int64_t min;    // The minimum allowed value
     int64_t max;    // The maximum allowed value
     int64_t mean;   // The mean starting value
     int64_t spread; // The spread of the starting value
+};
+
+struct __MAIN_Uint32Constraint {
+    uint32_t min;    // The minimum allowed value
+    uint32_t max;    // The maximum allowed value
+    uint32_t mean;   // The mean starting value
+    uint32_t spread; // The spread of the starting value
+};
+
+struct __MAIN_Int32Constraint {
+    int32_t min;    // The minimum allowed value
+    int32_t max;    // The maximum allowed value
+    int32_t mean;   // The mean starting value
+    int32_t spread; // The spread of the starting value
+};
+
+struct __MAIN_Uint16Constraint {
+    uint16_t min;    // The minimum allowed value
+    uint16_t max;    // The maximum allowed value
+    uint16_t mean;   // The mean starting value
+    uint16_t spread; // The spread of the starting value
+};
+
+struct __MAIN_Int16Constraint {
+    int16_t min;    // The minimum allowed value
+    int16_t max;    // The maximum allowed value
+    int16_t mean;   // The mean starting value
+    int16_t spread; // The spread of the starting value
+};
+
+struct __MAIN_Uint8Constraint {
+    uint8_t min;    // The minimum allowed value
+    uint8_t max;    // The maximum allowed value
+    uint8_t mean;   // The mean starting value
+    uint8_t spread; // The spread of the starting value
+};
+
+struct __MAIN_Int8Constraint {
+    int8_t min;    // The minimum allowed value
+    int8_t max;    // The maximum allowed value
+    int8_t mean;   // The mean starting value
+    int8_t spread; // The spread of the starting value
 };
 
 struct __MAIN_FloatConstraint {
@@ -99,35 +147,35 @@ struct __MAIN_FloatConstraint {
 };
 
 struct __MAIN_GeneConstraints {
-    MAIN_UintConstraint maxHeight; // The maximum height of the plant
-    MAIN_UintConstraint maxSize; // The maximum size of the plant
+    MAIN_Uint8Constraint maxHeight; // The maximum height of the plant
+    MAIN_Uint8Constraint maxSize; // The maximum size of the plant
     MAIN_FloatConstraint efficiency; // The effieciency at collecting energy
     MAIN_FloatConstraint growthRateHeight; // The probability the plant will grow in height if it can
     MAIN_FloatConstraint growthRateSize; // The probability the plant will grow in size if it can
-    MAIN_UintConstraint minGrowthEnergyHeight; // The minimum energy required to grow in height
-    MAIN_UintConstraint minGrowthEnergySize; // The minimum energy required to grow in size
+    MAIN_Uint16Constraint minGrowthEnergyHeight; // The minimum energy required to grow in height
+    MAIN_Uint16Constraint minGrowthEnergySize; // The minimum energy required to grow in size
     MAIN_FloatConstraint spawnRate; // The probability of spawning if it can
-    MAIN_UintConstraint minSpawnEnergy; // The minimum energy required to spawn
-    MAIN_UintConstraint maxTileEnergy; // The maximum amount of energy allowed to store per tile
-    MAIN_UintConstraint spawnEnergy; // The amount of energy to give each seed
-    MAIN_UintConstraint spawnSize; // The average number of seeds per spawning
-    MAIN_UintConstraint spawnSpread; // The spread of the number of seeds per spawning
+    MAIN_Uint16Constraint minSpawnEnergy; // The minimum energy required to spawn
+    MAIN_Uint32Constraint maxTileEnergy; // The maximum amount of energy allowed to store per tile
+    MAIN_Uint32Constraint spawnEnergy; // The amount of energy to give each seed
+    MAIN_Uint8Constraint spawnSize; // The average number of seeds per spawning
+    MAIN_Uint8Constraint spawnSpread; // The spread of the number of seeds per spawning
     MAIN_FloatConstraint mutationRate; // The probability that a mutation occurs during spawning
-    MAIN_UintConstraint mutationAttempts; // The number of attempts to do a mutation during spawning
+    MAIN_Uint8Constraint mutationAttempts; // The number of attempts to do a mutation during spawning
 };
 
 struct __MAIN_MapSettings {
-    uint64_t width; // The width of the map
-    uint64_t height; // The height of the map
-    uint64_t minEnergy; // The minimum energy production per tile
-    uint64_t maxEnergy; // The maximum energy production per tile
+    uint32_t width; // The width of the map
+    uint32_t height; // The height of the map
+    uint32_t minEnergy; // The minimum energy production per tile
+    uint32_t maxEnergy; // The maximum energy production per tile
     char *energyMethod; // The method to calculate the energy
 };
 
 struct __MAIN_InitialSettings {
-    uint64_t count; // The number of plant to create at the beginning
+    uint16_t count; // The number of plant to create at the beginning
     uint64_t seed; // The seed for the simulation
-    uint64_t energy; // The starting energy of all the initial plants
+    uint32_t energy; // The starting energy of all the initial plants
 };
 
 struct __MAIN_EnergySettings {
@@ -139,6 +187,7 @@ struct __MAIN_EnergySettings {
     double effPow; // The power of the efficiency loss
     double growthBase; // The energy used in base growth
     double growthStorage; // The energy used in storage growth
+    uint32_t baseCost; // A base cost that is added to any plant
 };
 
 struct __MAIN_Settings {
@@ -150,8 +199,8 @@ struct __MAIN_Settings {
 };
 
 struct __MAIN_Size {
-    uint64_t w; // The width
-    uint64_t h; // The height
+    uint32_t w; // The width
+    uint32_t h; // The height
 };
 
 struct __MAIN_Map {
@@ -167,35 +216,35 @@ struct __MAIN_Map {
 struct __MAIN_Tile {
     MAIN_Plant **plantList; // List of all the plants in this tile in order from tallest to lowest
     size_t plantCount; // The number of plants in the plant list
-    uint64_t energy; // The energy production of the tile
+    uint32_t energy; // The energy production of the tile
 };
 
 struct __MAIN_Gene {
-    uint64_t maxHeight;             // The maximum height of the plant
-    uint64_t maxSize;               // The maximum size of the plant
+    uint8_t maxHeight;             // The maximum height of the plant
+    uint8_t maxSize;               // The maximum size of the plant
     double efficiency;              // The effieciency at collecting energy
     double growthRateHeight;        // The probability the plant will grow in height if it can
     double growthRateSize;          // The probability the plant will grow in size if it can
-    uint64_t minGrowthEnergyHeight; // The minimum energy required to grow in height
-    uint64_t minGrowthEnergySize;   // The minimum energy required to grow in size
+    uint16_t minGrowthEnergyHeight; // The minimum energy required to grow in height
+    uint16_t minGrowthEnergySize;   // The minimum energy required to grow in size
     double spawnRate;               // The probability of spawning if it can
-    uint64_t minSpawnEnergy;        // The minimum energy required to spawn
-    uint64_t maxTileEnergy;         // The maximum amount of energy allowed to store per tile
-    uint64_t spawnEnergy;           // The amount of energy to give each seed
-    uint64_t spawnSize;             // The average number of seeds per spawning
-    uint64_t spawnSpread;           // The spread of the number of seeds per spawning
+    uint16_t minSpawnEnergy;        // The minimum energy required to spawn
+    uint32_t maxTileEnergy;         // The maximum amount of energy allowed to store per tile
+    uint32_t spawnEnergy;           // The amount of energy to give each seed
+    uint8_t spawnSize;             // The average number of seeds per spawning
+    uint8_t spawnSpread;           // The spread of the number of seeds per spawning
     double mutationRate;            // The probability that a mutation occurs during spawning
-    uint64_t mutationAttempts;      // The number of attempts to do a mutation during spawning
+    uint8_t mutationAttempts;      // The number of attempts to do a mutation during spawning
 };
 
 struct __MAIN_PlantStats {
-    uint64_t size; // The size of the plant
-    uint64_t height; // The height of the plant
-    uint64_t energy; // The energy storage of the plant
+    uint8_t size; // The size of the plant
+    uint8_t height; // The height of the plant
+    uint32_t energy; // The energy storage of the plant
     uint64_t age; // At what random tick it was born
-    uint64_t energyUsage; // The amount of energy to use per turn
-    uint64_t maxEnergy; // The maximum amount of energy the plant can store
-    uint64_t biomass; // The biomass of the plant
+    uint32_t energyUsage; // The amount of energy to use per turn
+    uint32_t maxEnergy; // The maximum amount of energy the plant can store
+    uint32_t biomass; // The biomass of the plant
 };
 
 struct __MAIN_Plant {
@@ -211,20 +260,62 @@ struct __MAIN_Plant {
 #define MAIN_SETTINGSCOUNT 5
 #define MAIN_SETTINGSMAPCOUNT 5
 #define MAIN_SETTINGSINITCOUNT 3
-#define MAIN_SETTINGSENERGYCOUNT 8
+#define MAIN_SETTINGSENERGYCOUNT 9
 
-SET_TranslationTable MAIN_SettingsTableUintConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
-    {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, min)},
-    {.name = "max", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, max)},
-    {.name = "mean", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, mean)},
-    {.name = "spread", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_UintConstraint, spread)}
+SET_TranslationTable MAIN_SettingsTableUint64Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, spread)}
 };
 
-SET_TranslationTable MAIN_SettingsTableIntConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
-    {.name = "min", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, min)},
-    {.name = "max", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, max)},
-    {.name = "mean", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, mean)},
-    {.name = "spread", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_IntConstraint, spread)}
+SET_TranslationTable MAIN_SettingsTableInt64Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_Int64Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_Int64Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_Int64Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_Int64Constraint, spread)}
+};
+
+SET_TranslationTable MAIN_SettingsTableUint32Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_Uint32Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_Uint32Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_Uint32Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_Uint32Constraint, spread)}
+};
+
+SET_TranslationTable MAIN_SettingsTableInt32Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_INT32, .depth = 0, .offset = offsetof(MAIN_Int32Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_INT32, .depth = 0, .offset = offsetof(MAIN_Int32Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_INT32, .depth = 0, .offset = offsetof(MAIN_Int32Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_INT32, .depth = 0, .offset = offsetof(MAIN_Int32Constraint, spread)}
+};
+
+SET_TranslationTable MAIN_SettingsTableUint16Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_Uint16Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_Uint16Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_Uint16Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_Uint16Constraint, spread)}
+};
+
+SET_TranslationTable MAIN_SettingsTableInt16Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_INT16, .depth = 0, .offset = offsetof(MAIN_Int16Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_INT16, .depth = 0, .offset = offsetof(MAIN_Int16Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_INT16, .depth = 0, .offset = offsetof(MAIN_Int16Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_INT16, .depth = 0, .offset = offsetof(MAIN_Int16Constraint, spread)}
+};
+
+SET_TranslationTable MAIN_SettingsTableUint8Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_Uint8Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_Uint8Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_Uint8Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_Uint8Constraint, spread)}
+};
+
+SET_TranslationTable MAIN_SettingsTableInt8Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
+    {.name = "min", .type = SET_DATATYPE_INT8, .depth = 0, .offset = offsetof(MAIN_Int8Constraint, min)},
+    {.name = "max", .type = SET_DATATYPE_INT8, .depth = 0, .offset = offsetof(MAIN_Int8Constraint, max)},
+    {.name = "mean", .type = SET_DATATYPE_INT8, .depth = 0, .offset = offsetof(MAIN_Int8Constraint, mean)},
+    {.name = "spread", .type = SET_DATATYPE_INT8, .depth = 0, .offset = offsetof(MAIN_Int8Constraint, spread)}
 };
 
 SET_TranslationTable MAIN_SettingsTableFloatConstraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
@@ -235,35 +326,35 @@ SET_TranslationTable MAIN_SettingsTableFloatConstraint[MAIN_SETTINGSCONSTRAINTCO
 };
 
 SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECONSTRAINTCOUNT] = {
-    {.name = "maxHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxHeight), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "maxSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxSize), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "maxHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxHeight), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "maxSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxSize), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "efficiency", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, efficiency), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "growthRateHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, growthRateHeight), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "growthRateSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, growthRateSize), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "minGrowthEnergyHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minGrowthEnergyHeight), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "minGrowthEnergySize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minGrowthEnergySize), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "minGrowthEnergyHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minGrowthEnergyHeight), .size = sizeof(MAIN_Uint16Constraint), .sub = MAIN_SettingsTableUint16Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "minGrowthEnergySize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minGrowthEnergySize), .size = sizeof(MAIN_Uint16Constraint), .sub = MAIN_SettingsTableUint16Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "spawnRate", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnRate), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "minSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minSpawnEnergy), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "maxTileEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxTileEnergy), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "spawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnEnergy), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "spawnSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSize), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "spawnSpread", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSpread), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "minSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minSpawnEnergy), .size = sizeof(MAIN_Uint16Constraint), .sub = MAIN_SettingsTableUint16Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "maxTileEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxTileEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "spawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "spawnSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSize), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "spawnSpread", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSpread), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "mutationRate", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationRate), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "mutationAttempts", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationAttempts), .size = sizeof(MAIN_UintConstraint), .sub = MAIN_SettingsTableUintConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT}
+    {.name = "mutationAttempts", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationAttempts), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT}
 };
 
 SET_TranslationTable MAIN_SettingsTableMap[MAIN_SETTINGSMAPCOUNT] = {
-    {.name = "width", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, width)},
-    {.name = "height", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, height)},
-    {.name = "minEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, minEnergy)},
-    {.name = "maxEnergy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)},
+    {.name = "width", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, width)},
+    {.name = "height", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, height)},
+    {.name = "minEnergy", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, minEnergy)},
+    {.name = "maxEnergy", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)},
     {.name = "energyMethod", .type = SET_DATATYPE_STR, .depth = 0, .offset = offsetof(MAIN_MapSettings, energyMethod)}
 };
 
 SET_TranslationTable MAIN_SettingsTableInit[MAIN_SETTINGSINITCOUNT] = {
-    {.name = "count", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, count)},
+    {.name = "count", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_InitialSettings, count)},
     {.name = "seed", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, seed)},
-    {.name = "energy", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_InitialSettings, energy)}
+    {.name = "energy", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_InitialSettings, energy)}
 };
 
 SET_TranslationTable MAIN_SettingsTableEnergy[MAIN_SETTINGSENERGYCOUNT] = {
@@ -274,7 +365,8 @@ SET_TranslationTable MAIN_SettingsTableEnergy[MAIN_SETTINGSENERGYCOUNT] = {
     {.name = "sizePow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, sizePow)},
     {.name = "effPow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, effPow)},
     {.name = "growthBase", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthBase)},
-    {.name = "growthStorage", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthStorage)}
+    {.name = "growthStorage", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthStorage)},
+    {.name = "baseCost", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_EnergySettings, baseCost)}
 };
 
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
@@ -310,10 +402,28 @@ void MAIN_TileEnergyCos(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const M
 void MAIN_TileEnergyCos2(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size);
 
 // Generates a uint from constraints
-uint64_t MAIN_GenerateUint(const MAIN_UintConstraint *Constraint, uint64_t *Random);
+uint64_t MAIN_GenerateUint64(const MAIN_Uint64Constraint *Constraint, uint64_t *Random);
 
 // Generates a uint from constraints
-int64_t MAIN_GenerateInt(const MAIN_IntConstraint *Constraint, uint64_t *Random);
+int64_t MAIN_GenerateInt64(const MAIN_Int64Constraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+uint32_t MAIN_GenerateUint32(const MAIN_Uint32Constraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+int32_t MAIN_GenerateInt32(const MAIN_Int32Constraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+uint16_t MAIN_GenerateUint16(const MAIN_Uint16Constraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+int16_t MAIN_GenerateInt16(const MAIN_Int16Constraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+uint8_t MAIN_GenerateUint8(const MAIN_Uint8Constraint *Constraint, uint64_t *Random);
+
+// Generates a uint from constraints
+int8_t MAIN_GenerateInt8(const MAIN_Int8Constraint *Constraint, uint64_t *Random);
 
 // Generates a uint from constraints
 double MAIN_GenerateFloat(const MAIN_FloatConstraint *Constraint, uint64_t *Random);
@@ -322,10 +432,28 @@ double MAIN_GenerateFloat(const MAIN_FloatConstraint *Constraint, uint64_t *Rand
 void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene);
 
 // Truncate an unsigned int, returns true if it did
-bool MAIN_TruncateUint(const MAIN_UintConstraint *Constraint, uint64_t *Value);
+bool MAIN_TruncateUint64(const MAIN_Uint64Constraint *Constraint, uint64_t *Value);
 
 // Truncate an unsigned int, returns true if it did
-bool MAIN_TruncateInt(const MAIN_IntConstraint *Constraint, int64_t *Value);
+bool MAIN_TruncateInt64(const MAIN_Int64Constraint *Constraint, int64_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateUint32(const MAIN_Uint32Constraint *Constraint, uint32_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateInt32(const MAIN_Int32Constraint *Constraint, int32_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateUint16(const MAIN_Uint16Constraint *Constraint, uint16_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateInt16(const MAIN_Int16Constraint *Constraint, int16_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateUint8(const MAIN_Uint8Constraint *Constraint, uint8_t *Value);
+
+// Truncate an unsigned int, returns true if it did
+bool MAIN_TruncateInt8(const MAIN_Int8Constraint *Constraint, int8_t *Value);
 
 // Truncate an unsigned int, returns true if it did
 bool MAIN_TruncateFloat(const MAIN_FloatConstraint *Constraint, double *Value);
@@ -334,7 +462,7 @@ bool MAIN_TruncateFloat(const MAIN_FloatConstraint *Constraint, double *Value);
 bool MAIN_TruncateGene(const MAIN_Settings *Settings, MAIN_Gene *Gene);
 
 // Create a plant and mutates the parent genes for it
-bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAIN_Gene *ParentGene);
+bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint32_t Energy, const MAIN_Gene *ParentGene);
 
 // Adds a plant to a tile
 bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant);
@@ -349,10 +477,10 @@ bool MAIN_AddToMap(MAIN_Map *Map, MAIN_Plant *Plant);
 bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant);
 
 // Calculates the energy usage of a plant
-uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant);
+uint32_t MAIN_EnergyUsage(const MAIN_Plant *Plant);
 
 // Calculates the biomass for a plant
-uint64_t MAIN_Biomass(const MAIN_Plant *Plant);
+uint32_t MAIN_Biomass(const MAIN_Plant *Plant);
 
 // Does one step of the evolution
 bool MAIN_Step(MAIN_Map *Map);
@@ -368,8 +496,14 @@ bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant);
 
 
 // Init functions
-void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct);
-void MAIN_InitIntConstraint(MAIN_IntConstraint *Struct);
+void MAIN_InitUint64Constraint(MAIN_Uint64Constraint *Struct);
+void MAIN_InitInt64Constraint(MAIN_Int64Constraint *Struct);
+void MAIN_InitUint32Constraint(MAIN_Uint32Constraint *Struct);
+void MAIN_InitInt32Constraint(MAIN_Int32Constraint *Struct);
+void MAIN_InitUint16Constraint(MAIN_Uint16Constraint *Struct);
+void MAIN_InitInt16Constraint(MAIN_Int16Constraint *Struct);
+void MAIN_InitUint8Constraint(MAIN_Uint8Constraint *Struct);
+void MAIN_InitInt8Constraint(MAIN_Int8Constraint *Struct);
 void MAIN_InitFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_InitMapSettings(MAIN_MapSettings *Struct);
@@ -384,8 +518,14 @@ void MAIN_InitGene(MAIN_Gene *Struct);
 void MAIN_InitSize(MAIN_Size *Struct);
 
 // Clean functions
-void MAIN_CleanUintConstraint(MAIN_UintConstraint *Struct);
-void MAIN_CleanIntConstraint(MAIN_IntConstraint *Struct);
+void MAIN_CleanUint64Constraint(MAIN_Uint64Constraint *Struct);
+void MAIN_CleanInt64Constraint(MAIN_Int64Constraint *Struct);
+void MAIN_CleanUint32Constraint(MAIN_Uint32Constraint *Struct);
+void MAIN_CleanInt32Constraint(MAIN_Int32Constraint *Struct);
+void MAIN_CleanUint16Constraint(MAIN_Uint16Constraint *Struct);
+void MAIN_CleanInt16Constraint(MAIN_Int16Constraint *Struct);
+void MAIN_CleanUint8Constraint(MAIN_Uint8Constraint *Struct);
+void MAIN_CleanInt8Constraint(MAIN_Int8Constraint *Struct);
 void MAIN_CleanFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct);
@@ -400,8 +540,14 @@ void MAIN_CleanGene(MAIN_Gene *Struct);
 void MAIN_CleanSize(MAIN_Size *Struct);
 
 // Destroy functions
-void MAIN_DestroyUintConstraint(MAIN_UintConstraint *Struct);
-void MAIN_DestroyIntConstraint(MAIN_IntConstraint *Struct);
+void MAIN_DestroyUint64Constraint(MAIN_Uint64Constraint *Struct);
+void MAIN_DestroyInt64Constraint(MAIN_Int64Constraint *Struct);
+void MAIN_DestroyUint32Constraint(MAIN_Uint32Constraint *Struct);
+void MAIN_DestroyInt32Constraint(MAIN_Int32Constraint *Struct);
+void MAIN_DestroyUint16Constraint(MAIN_Uint16Constraint *Struct);
+void MAIN_DestroyInt16Constraint(MAIN_Int16Constraint *Struct);
+void MAIN_DestroyUint8Constraint(MAIN_Uint8Constraint *Struct);
+void MAIN_DestroyInt8Constraint(MAIN_Int8Constraint *Struct);
 void MAIN_DestroyFloatConstraint(MAIN_FloatConstraint *Struct);
 void MAIN_DestroyGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_DestroyMapSettings(MAIN_MapSettings *Struct);
@@ -556,21 +702,51 @@ void MAIN_TileEnergyConst(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const
 void MAIN_TileEnergyCos(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size)
 {
     for (MAIN_Tile *TileList = Tiles, *EndTileList = Tiles + Size->w * Size->h; TileList < EndTileList; ++TileList)
-        TileList->energy = Settings->map.minEnergy + (uint64_t)((double)(Settings->map.maxEnergy - Settings->map.minEnergy) * pow(cos((double)((TileList - Tiles) / Size->w) / (double)Size->h * MAIN_PI), 2.));
+        TileList->energy = Settings->map.minEnergy + (uint32_t)((double)(Settings->map.maxEnergy - Settings->map.minEnergy) * pow(cos((double)((TileList - Tiles) / Size->w) / (double)Size->h * MAIN_PI), 2.));
 }
 
 void MAIN_TileEnergyCos2(const MAIN_Settings *Settings, MAIN_Tile *Tiles, const MAIN_Size *Size)
 {
     for (MAIN_Tile *TileList = Tiles, *EndTileList = Tiles + Size->w * Size->h; TileList < EndTileList; ++TileList)
-        TileList->energy = Settings->map.minEnergy + (uint64_t)((double)(Settings->map.maxEnergy - Settings->map.minEnergy) * pow(cos((double)((TileList - Tiles) / Size->w) / (double)Size->h * 2 * MAIN_PI), 2.));
+        TileList->energy = Settings->map.minEnergy + (uint32_t)((double)(Settings->map.maxEnergy - Settings->map.minEnergy) * pow(cos((double)((TileList - Tiles) / Size->w) / (double)Size->h * 2 * MAIN_PI), 2.));
 }
 
-uint64_t MAIN_GenerateUint(const MAIN_UintConstraint *Constraint, uint64_t *Random)
+uint64_t MAIN_GenerateUint64(const MAIN_Uint64Constraint *Constraint, uint64_t *Random)
 {
     return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
 }
 
-int64_t MAIN_GenerateInt(const MAIN_IntConstraint *Constraint, uint64_t *Random)
+int64_t MAIN_GenerateInt64(const MAIN_Int64Constraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+uint32_t MAIN_GenerateUint32(const MAIN_Uint32Constraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+int32_t MAIN_GenerateInt32(const MAIN_Int32Constraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+uint16_t MAIN_GenerateUint16(const MAIN_Uint16Constraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+int16_t MAIN_GenerateInt16(const MAIN_Int16Constraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+uint8_t MAIN_GenerateUint8(const MAIN_Uint8Constraint *Constraint, uint64_t *Random)
+{
+    return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
+}
+
+int8_t MAIN_GenerateInt8(const MAIN_Int8Constraint *Constraint, uint64_t *Random)
 {
     return Constraint->mean - Constraint->spread + (RNG_RandS(*Random) % (2 * Constraint->spread + 1));
 }
@@ -582,24 +758,24 @@ double MAIN_GenerateFloat(const MAIN_FloatConstraint *Constraint, uint64_t *Rand
 
 void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene)
 {
-    Gene->maxHeight = MAIN_GenerateUint(&Map->settings->geneConstraints.maxHeight, &Map->random);
-    Gene->maxSize = MAIN_GenerateUint(&Map->settings->geneConstraints.maxSize, &Map->random);
+    Gene->maxHeight = MAIN_GenerateUint8(&Map->settings->geneConstraints.maxHeight, &Map->random);
+    Gene->maxSize = MAIN_GenerateUint8(&Map->settings->geneConstraints.maxSize, &Map->random);
     Gene->efficiency = MAIN_GenerateFloat(&Map->settings->geneConstraints.efficiency, &Map->random);
     Gene->growthRateHeight = MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateHeight, &Map->random);
     Gene->growthRateSize = MAIN_GenerateFloat(&Map->settings->geneConstraints.growthRateSize, &Map->random);
-    Gene->minGrowthEnergyHeight = MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergyHeight, &Map->random);
-    Gene->minGrowthEnergySize = MAIN_GenerateUint(&Map->settings->geneConstraints.minGrowthEnergySize, &Map->random);
+    Gene->minGrowthEnergyHeight = MAIN_GenerateUint16(&Map->settings->geneConstraints.minGrowthEnergyHeight, &Map->random);
+    Gene->minGrowthEnergySize = MAIN_GenerateUint16(&Map->settings->geneConstraints.minGrowthEnergySize, &Map->random);
     Gene->spawnRate = MAIN_GenerateFloat(&Map->settings->geneConstraints.spawnRate, &Map->random);
-    Gene->minSpawnEnergy = MAIN_GenerateUint(&Map->settings->geneConstraints.minSpawnEnergy, &Map->random);
-    Gene->maxTileEnergy = MAIN_GenerateUint(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
-    Gene->spawnEnergy = MAIN_GenerateUint(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
-    Gene->spawnSize = MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSize, &Map->random);
-    Gene->spawnSpread = MAIN_GenerateUint(&Map->settings->geneConstraints.spawnSpread, &Map->random);
+    Gene->minSpawnEnergy = MAIN_GenerateUint16(&Map->settings->geneConstraints.minSpawnEnergy, &Map->random);
+    Gene->maxTileEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
+    Gene->spawnEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
+    Gene->spawnSize = MAIN_GenerateUint8(&Map->settings->geneConstraints.spawnSize, &Map->random);
+    Gene->spawnSpread = MAIN_GenerateUint8(&Map->settings->geneConstraints.spawnSpread, &Map->random);
     Gene->mutationRate = MAIN_GenerateFloat(&Map->settings->geneConstraints.mutationRate, &Map->random);
-    Gene->mutationAttempts = MAIN_GenerateUint(&Map->settings->geneConstraints.mutationAttempts, &Map->random);
+    Gene->mutationAttempts = MAIN_GenerateUint8(&Map->settings->geneConstraints.mutationAttempts, &Map->random);
 }
 
-bool MAIN_TruncateUint(const MAIN_UintConstraint *Constraint, uint64_t *Value)
+bool MAIN_TruncateUint64(const MAIN_Uint64Constraint *Constraint, uint64_t *Value)
 {
     if (*Value < Constraint->min)
     {
@@ -616,7 +792,109 @@ bool MAIN_TruncateUint(const MAIN_UintConstraint *Constraint, uint64_t *Value)
     return false;
 }
 
-bool MAIN_TruncateInt(const MAIN_IntConstraint *Constraint, int64_t *Value)
+bool MAIN_TruncateInt64(const MAIN_Int64Constraint *Constraint, int64_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateUint32(const MAIN_Uint32Constraint *Constraint, uint32_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateInt32(const MAIN_Int32Constraint *Constraint, int32_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateUint16(const MAIN_Uint16Constraint *Constraint, uint16_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateInt16(const MAIN_Int16Constraint *Constraint, int16_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateUint8(const MAIN_Uint8Constraint *Constraint, uint8_t *Value)
+{
+    if (*Value < Constraint->min)
+    {
+        *Value = Constraint->min;
+        return true;
+    }
+
+    if (*Value > Constraint->max)
+    {
+        *Value = Constraint->max;
+        return true;
+    }
+
+    return false;
+}
+
+bool MAIN_TruncateInt8(const MAIN_Int8Constraint *Constraint, int8_t *Value)
 {
     if (*Value < Constraint->min)
     {
@@ -654,21 +932,21 @@ bool MAIN_TruncateGene(const MAIN_Settings *Settings, MAIN_Gene *Gene)
 {
     bool Return = false;
 
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.maxHeight, &Gene->maxHeight);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.maxSize, &Gene->maxSize);
+    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.maxHeight, &Gene->maxHeight);
+    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.maxSize, &Gene->maxSize);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.efficiency, &Gene->efficiency);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.growthRateHeight, &Gene->growthRateHeight);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.growthRateSize, &Gene->growthRateSize);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.minGrowthEnergyHeight, &Gene->minGrowthEnergyHeight);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.minGrowthEnergySize, &Gene->minGrowthEnergySize);
+    Return |= MAIN_TruncateUint16(&Settings->geneConstraints.minGrowthEnergyHeight, &Gene->minGrowthEnergyHeight);
+    Return |= MAIN_TruncateUint16(&Settings->geneConstraints.minGrowthEnergySize, &Gene->minGrowthEnergySize);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.spawnRate, &Gene->spawnRate);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.minSpawnEnergy, &Gene->minSpawnEnergy);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.maxTileEnergy, &Gene->maxTileEnergy);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.spawnEnergy, &Gene->spawnEnergy);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.spawnSize, &Gene->spawnSize);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.spawnSpread, &Gene->spawnSpread);
+    Return |= MAIN_TruncateUint16(&Settings->geneConstraints.minSpawnEnergy, &Gene->minSpawnEnergy);
+    Return |= MAIN_TruncateUint32(&Settings->geneConstraints.maxTileEnergy, &Gene->maxTileEnergy);
+    Return |= MAIN_TruncateUint32(&Settings->geneConstraints.spawnEnergy, &Gene->spawnEnergy);
+    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.spawnSize, &Gene->spawnSize);
+    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.spawnSpread, &Gene->spawnSpread);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.mutationRate, &Gene->mutationRate);
-    Return |= MAIN_TruncateUint(&Settings->geneConstraints.mutationAttempts, &Gene->mutationAttempts);
+    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.mutationAttempts, &Gene->mutationAttempts);
 
     return Return;
 }
@@ -872,14 +1150,14 @@ bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
     return true;
 }
 
-uint64_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
+uint32_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
 {
-    uint64_t StorageEnergy = (uint64_t)(Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow));
-    uint64_t BaseEnergy = (uint64_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow));
-    return StorageEnergy + BaseEnergy;
+    uint32_t StorageEnergy = (uint32_t)(Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow));
+    uint32_t BaseEnergy = (uint32_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow));
+    return StorageEnergy + BaseEnergy + Plant->map->settings->energy.baseCost;
 }
 
-bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAIN_Gene *ParentGene)
+bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint32_t Energy, const MAIN_Gene *ParentGene)
 {
     // Allocate memory
     MAIN_Plant *Plant = (MAIN_Plant *)malloc(sizeof(MAIN_Plant));
@@ -909,7 +1187,7 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAI
     // Copy genes with mutation
     memcpy((void *)&Plant->gene, (void *)ParentGene, sizeof(MAIN_Gene));
 
-    for (uint64_t Attempt = 0; Attempt < ParentGene->mutationAttempts; ++Attempt)
+    for (uint16_t Attempt = 0; Attempt < ParentGene->mutationAttempts; ++Attempt)
         if (RNG_RandSf(Map->random) < ParentGene->mutationRate)
             *((uint8_t *)&Plant->gene + (RNG_RandS(Map->random) % sizeof(MAIN_Gene))) ^= 1 << (RNG_RandS(Map->random) % sizeof(uint8_t));
 
@@ -940,10 +1218,10 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint64_t Energy, const MAI
     return true;
 }
 
-uint64_t MAIN_Biomass(const MAIN_Plant *Plant)
+uint32_t MAIN_Biomass(const MAIN_Plant *Plant)
 {
-    uint64_t StorageSize = (uint64_t)((double)Plant->stats.maxEnergy * Plant->map->settings->energy.growthStorage);
-    uint64_t BaseSize = (uint64_t)((double)(Plant->stats.height * Plant->stats.size) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
+    uint32_t StorageSize = (uint32_t)((double)Plant->stats.maxEnergy * Plant->map->settings->energy.growthStorage);
+    uint32_t BaseSize = (uint32_t)((double)(Plant->stats.height * Plant->stats.size) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
     return StorageSize + BaseSize;
 }
 
@@ -976,7 +1254,7 @@ bool MAIN_Step(MAIN_Map *Map)
     for (MAIN_Plant **PlantList = TempPlantList, **EndPlantList = TempPlantList + Tile->plantCount; PlantList < EndPlantList; ++PlantList)
     {
         // Give energy
-        uint64_t GetEnergy = (uint64_t)((double)Energy * (*PlantList)->gene.efficiency);
+        uint64_t GetEnergy = (uint32_t)((double)Energy * (*PlantList)->gene.efficiency);
         Energy -= GetEnergy;
         (*PlantList)->stats.energy += GetEnergy;
 
@@ -1046,7 +1324,7 @@ bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant)
 }
 
 
-void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct)
+void MAIN_InitUint64Constraint(MAIN_Uint64Constraint *Struct)
 {
     Struct->min = 0;
     Struct->max = 0xFFFFFFFFFFFFFFFF;
@@ -1054,10 +1332,58 @@ void MAIN_InitUintConstraint(MAIN_UintConstraint *Struct)
     Struct->spread = 0;
 }
 
-void MAIN_InitIntConstraint(MAIN_IntConstraint *Struct)
+void MAIN_InitInt64Constraint(MAIN_Int64Constraint *Struct)
 {
     Struct->min = -0x8000000000000000;
     Struct->max = -0x7FFFFFFFFFFFFFFF;
+    Struct->mean = 0;
+    Struct->spread = 0;
+}
+
+void MAIN_InitUint32Constraint(MAIN_Uint32Constraint *Struct)
+{
+    Struct->min = 0;
+    Struct->max = 0xFFFFFFFF;
+    Struct->mean = 0;
+    Struct->spread = 0;
+}
+
+void MAIN_InitInt32Constraint(MAIN_Int32Constraint *Struct)
+{
+    Struct->min = -0x80000000;
+    Struct->max = -0x7FFFFFFF;
+    Struct->mean = 0;
+    Struct->spread = 0;
+}
+
+void MAIN_InitUint16Constraint(MAIN_Uint16Constraint *Struct)
+{
+    Struct->min = 0;
+    Struct->max = 0xFFFF;
+    Struct->mean = 0;
+    Struct->spread = 0;
+}
+
+void MAIN_InitInt16Constraint(MAIN_Int16Constraint *Struct)
+{
+    Struct->min = -0x8000;
+    Struct->max = -0x7FFF;
+    Struct->mean = 0;
+    Struct->spread = 0;
+}
+
+void MAIN_InitUint8Constraint(MAIN_Uint8Constraint *Struct)
+{
+    Struct->min = 0;
+    Struct->max = 0xFF;
+    Struct->mean = 0;
+    Struct->spread = 0;
+}
+
+void MAIN_InitInt8Constraint(MAIN_Int8Constraint *Struct)
+{
+    Struct->min = -0x80;
+    Struct->max = -0x7F;
     Struct->mean = 0;
     Struct->spread = 0;
 }
@@ -1073,12 +1399,12 @@ void MAIN_InitFloatConstraint(MAIN_FloatConstraint *Struct)
 void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
 {
     Struct->maxHeight.min = 1;
-    Struct->maxHeight.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->maxHeight.max = 0xFF;
     Struct->maxHeight.mean = 100;
     Struct->maxHeight.spread = 100;
 
     Struct->maxSize.min = 1;
-    Struct->maxSize.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->maxSize.max = 0xFF;
     Struct->maxSize.mean = 10;
     Struct->maxSize.spread = 10;
 
@@ -1098,12 +1424,12 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->growthRateSize.spread = 0.5;
 
     Struct->minGrowthEnergyHeight.min = 0;
-    Struct->minGrowthEnergyHeight.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->minGrowthEnergyHeight.max = 0xFFFF;
     Struct->minGrowthEnergyHeight.mean = 1000;
     Struct->minGrowthEnergyHeight.spread = 1000;
 
     Struct->minGrowthEnergySize.min = 0;
-    Struct->minGrowthEnergySize.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->minGrowthEnergySize.max = 0xFFFF;
     Struct->minGrowthEnergySize.mean = 1000;
     Struct->minGrowthEnergySize.spread = 1000;
 
@@ -1113,27 +1439,27 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->spawnRate.spread = 0.5;
 
     Struct->minSpawnEnergy.min = 0;
-    Struct->minSpawnEnergy.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->minSpawnEnergy.max = 0xFFFF;
     Struct->minSpawnEnergy.mean = 1000;
     Struct->minSpawnEnergy.spread = 1000;
 
     Struct->maxTileEnergy.min = 1;
-    Struct->maxTileEnergy.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->maxTileEnergy.max = 0xFFFFFFFF;
     Struct->maxTileEnergy.mean = 1000;
     Struct->maxTileEnergy.spread = 1000;
 
     Struct->spawnEnergy.min = 1;
-    Struct->spawnEnergy.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->spawnEnergy.max = 0xFFFFFFFF;
     Struct->spawnEnergy.mean = 100;
     Struct->spawnEnergy.spread = 100;
 
     Struct->spawnSize.min = 1;
-    Struct->spawnSize.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->spawnSize.max = 0xFF;
     Struct->spawnSize.mean = 5;
     Struct->spawnSize.spread = 5;
 
     Struct->spawnSpread.min = 0;
-    Struct->spawnSpread.max = 0xFFFFFFFFFFFFFFFF;
+    Struct->spawnSpread.max = 0xFF;
     Struct->spawnSpread.mean = 5;
     Struct->spawnSpread.spread = 5;
 
@@ -1143,15 +1469,15 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->mutationRate.spread = 0.5;
 
     Struct->mutationAttempts.min = 0;
-    Struct->mutationAttempts.max = 0x100;
+    Struct->mutationAttempts.max = 0xFF;
     Struct->mutationAttempts.mean = 10;
     Struct->mutationAttempts.spread = 10;
 }
 
 void MAIN_InitMapSettings(MAIN_MapSettings *Struct)
 {
-    Struct->height = 1024;
-    Struct->width = 1024;
+    Struct->height = 128;
+    Struct->width = 128;
     Struct->minEnergy = 1000;
     Struct->maxEnergy = 10000;
     Struct->energyMethod = (char *)malloc(sizeof(char) * (strlen(MAIN_ENERGYMETHOD_CONST) + 1));
@@ -1177,6 +1503,7 @@ void MAIN_InitEnergySettings(MAIN_EnergySettings *Struct)
     Struct->effPow = 1.;
     Struct->growthBase = 100.;
     Struct->growthStorage = 1.;
+    Struct->baseCost = 1;
 }
 
 void MAIN_InitSettings(MAIN_Settings *Struct)
@@ -1250,12 +1577,42 @@ void MAIN_InitSize(MAIN_Size *Struct)
 }
 
 
-void MAIN_CleanUintConstraint(MAIN_UintConstraint *Struct)
+void MAIN_CleanUint64Constraint(MAIN_Uint64Constraint *Struct)
 {
 
 }
 
-void MAIN_CleanIntConstraint(MAIN_IntConstraint *Struct)
+void MAIN_CleanInt64Constraint(MAIN_Int64Constraint *Struct)
+{
+
+}
+
+void MAIN_CleanUint32Constraint(MAIN_Uint32Constraint *Struct)
+{
+
+}
+
+void MAIN_CleanInt32Constraint(MAIN_Int32Constraint *Struct)
+{
+
+}
+
+void MAIN_CleanUint16Constraint(MAIN_Uint16Constraint *Struct)
+{
+
+}
+
+void MAIN_CleanInt16Constraint(MAIN_Int16Constraint *Struct)
+{
+
+}
+
+void MAIN_CleanUint8Constraint(MAIN_Uint8Constraint *Struct)
+{
+
+}
+
+void MAIN_CleanInt8Constraint(MAIN_Int8Constraint *Struct)
 {
 
 }
@@ -1268,21 +1625,21 @@ void MAIN_CleanFloatConstraint(MAIN_FloatConstraint *Struct)
 void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct)
 {
     // Clean all constraints
-    MAIN_CleanUintConstraint(&Struct->maxHeight);
-    MAIN_CleanUintConstraint(&Struct->maxSize);
+    MAIN_CleanUint8Constraint(&Struct->maxHeight);
+    MAIN_CleanUint8Constraint(&Struct->maxSize);
     MAIN_CleanFloatConstraint(&Struct->efficiency);
     MAIN_CleanFloatConstraint(&Struct->growthRateHeight);
     MAIN_CleanFloatConstraint(&Struct->growthRateSize);
-    MAIN_CleanUintConstraint(&Struct->minGrowthEnergyHeight);
-    MAIN_CleanUintConstraint(&Struct->minGrowthEnergySize);
+    MAIN_CleanUint16Constraint(&Struct->minGrowthEnergyHeight);
+    MAIN_CleanUint16Constraint(&Struct->minGrowthEnergySize);
     MAIN_CleanFloatConstraint(&Struct->spawnRate);
-    MAIN_CleanUintConstraint(&Struct->minSpawnEnergy);
-    MAIN_CleanUintConstraint(&Struct->maxTileEnergy);
-    MAIN_CleanUintConstraint(&Struct->spawnEnergy);
-    MAIN_CleanUintConstraint(&Struct->spawnSize);
-    MAIN_CleanUintConstraint(&Struct->spawnSpread);
+    MAIN_CleanUint16Constraint(&Struct->minSpawnEnergy);
+    MAIN_CleanUint32Constraint(&Struct->maxTileEnergy);
+    MAIN_CleanUint32Constraint(&Struct->spawnEnergy);
+    MAIN_CleanUint8Constraint(&Struct->spawnSize);
+    MAIN_CleanUint8Constraint(&Struct->spawnSpread);
     MAIN_CleanFloatConstraint(&Struct->mutationRate);
-    MAIN_CleanUintConstraint(&Struct->mutationAttempts);
+    MAIN_CleanUint8Constraint(&Struct->mutationAttempts);
 }
 
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct)
@@ -1391,15 +1748,51 @@ void MAIN_CleanSize(MAIN_Size *Struct)
 }
 
 
-void MAIN_DestroyUintConstraint(MAIN_UintConstraint *Struct)
+void MAIN_DestroyUint64Constraint(MAIN_Uint64Constraint *Struct)
 {
-    MAIN_CleanUintConstraint(Struct);
+    MAIN_CleanUint64Constraint(Struct);
     free(Struct);
 }
 
-void MAIN_DestroyIntConstraint(MAIN_IntConstraint *Struct)
+void MAIN_DestroyInt64Constraint(MAIN_Int64Constraint *Struct)
 {
-    MAIN_CleanIntConstraint(Struct);
+    MAIN_CleanInt64Constraint(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyUint32Constraint(MAIN_Uint32Constraint *Struct)
+{
+    MAIN_CleanUint32Constraint(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyInt32Constraint(MAIN_Int32Constraint *Struct)
+{
+    MAIN_CleanInt32Constraint(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyUint16Constraint(MAIN_Uint16Constraint *Struct)
+{
+    MAIN_CleanUint16Constraint(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyInt16Constraint(MAIN_Int16Constraint *Struct)
+{
+    MAIN_CleanInt16Constraint(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyUint8Constraint(MAIN_Uint8Constraint *Struct)
+{
+    MAIN_CleanUint8Constraint(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyInt8Constraint(MAIN_Int8Constraint *Struct)
+{
+    MAIN_CleanInt8Constraint(Struct);
     free(Struct);
 }
 
@@ -1499,22 +1892,22 @@ int main(int argc, char **argv)
 
     // Check the tile energy
     /*for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; TileList += Map->size.w)
-        printf("TileEnergy: %lu\n", TileList->energy);*/
+        printf("TileEnergy: %u\n", TileList->energy);*/
 
     // Print the number of plants
-    printf("InitialPlantCount: %lu\n", Map->plantCount);
+    printf("InitialPlantCount: %u\n", Map->plantCount);
 
     // Print energy usage
     /*for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
-        printf("EnergyUsage: %lu\n", (*PlantList)->stats.energyUsage);*/
-    //printf("%lu, %lu, %lu, %lu\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
+        printf("EnergyUsage: %u\n", (*PlantList)->stats.energyUsage);*/
+    //printf("%u, %u, %u, %u\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
 
     // Do the simulation
     bool Running = true;
 
-    for (uint64_t Step = 0; Step < 20 && Running; ++Step)
+    for (uint64_t Step = 0; Step < 10 && Running; ++Step)
     {
-        for (uint64_t SubStep = 0; SubStep < 2; ++SubStep)
+        for (uint64_t SubStep = 0; SubStep < 16 * 16; ++SubStep)
             if (!MAIN_Step(Map))
             {
                 printf("Error while doing a simulation step: %s\n", MAIN_GetError());
@@ -1522,10 +1915,10 @@ int main(int argc, char **argv)
                 break;
             }
 
-        printf("PlantCount: %lu\n", Map->plantCount);
+        printf("PlantCount: %u\n", Map->plantCount);
     }
 
-    printf("FinalPlantCount: %lu\n", Map->plantCount);
+    printf("FinalPlantCount: %u\n", Map->plantCount);
 
     // Clean up
     MAIN_DestroyMap(Map);

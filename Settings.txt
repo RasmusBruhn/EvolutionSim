@@ -1,8 +1,8 @@
 killIlligal = true;
 
 map = {
-    width = 1;
-    height = 1;
+    width = 16;
+    height = 16;
     minEnergy = 100;
     maxEnergy = 10000;
     energyMethod = "const";
@@ -23,19 +23,20 @@ energy = {
     effPow = 1.;
     growthBase = 100.;
     growthStorage = 1.;
+    baseCost = 1;
 };
 
 geneConstraints = {
     maxHeight = {
         min = 1;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFF;
         mean = 100;
         spread = 100;
     };
 
     maxSize = {
         min = 1;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFF;
         mean = 10;
         spread = 10;
     };
@@ -63,14 +64,14 @@ geneConstraints = {
 
     minGrowthEnergyHeight = {
         min = 0;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFFFF;
         mean = 1000;
         spread = 1000;
     };
 
     minGrowthEnergySize = {
         min = 0;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFFFF;
         mean = 1000;
         spread = 1000;
     };
@@ -84,35 +85,35 @@ geneConstraints = {
 
     minSpawnEnergy = {
         min = 0;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFFFF;
         mean = 1000;
         spread = 1000;
     };
 
     maxTileEnergy = {
         min = 1;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFFFFFFFF;
         mean = 1000;
         spread = 1000;
     };
 
     spawnEnergy = {
         min = 1;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFFFFFFFF;
         mean = 100;
         spread = 100;
     };
 
     spawnSize = {
         min = 1;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFF;
         mean = 5;
         spread = 5;
     };
 
     spawnSpread = {
         min = 0;
-        max = 0xFFFFFFFFFFFFFFFF;
+        max = 0xFF;
         mean = 5;
         spread = 5;
     };
@@ -126,7 +127,7 @@ geneConstraints = {
 
     mutationAttempts = {
         min = 0;
-        max = 100;
+        max = 0xFF;
         mean = 10;
         spread = 10;
     };
