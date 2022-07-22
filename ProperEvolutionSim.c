@@ -39,7 +39,8 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_MALLOC = 0x00090200,
     MAIN_ERRORID_STEP_SPAWN = 0x00090201,
     MAIN_ERRORID_STEP_GROWHEIGHT = 0x00090202,
-    MAIN_ERRORID_STEP_GROWSIZE = 0x00090203
+    MAIN_ERRORID_STEP_GROWSIZE = 0x00090203,
+    MAIN_ERRORID_GROWHEIGHT_INTILE = 0x000A0200
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
@@ -1315,6 +1316,71 @@ int8_t MAIN_Spawn(const MAIN_Tile *Tile, MAIN_Plant *Parent)
 
 bool MAIN_GrowHeight(MAIN_Plant *Plant)
 {
+    // Calculate the energy needed
+    ++Plant->stats.height;
+    uint32_t NewBiomass = MAIN_Biomass(Plant);
+    uint32_t NeededEnergy = NewBiomass - Plant->stats.biomass;
+    --Plant->stats.height;
+
+    // Test if it has enough energy
+    if (NeededEnergy > Plant->stats.energy)
+        return true;
+
+    // Update the height in all tiles
+    for (MAIN_Tile **TileList = Plant->tileList, **EndTileList = Plant->tileList + Plant->stats.size; TileList < EndTileList; ++TileList)
+    {
+        // Find plant in plant list
+        MAIN_Plant **PlantList = (*TileList)->plantList;
+
+        for (MAIN_Plant **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
+        {
+            if ((*MiddlePlantList)->stats.height > Plant->stats.height + 1)
+                PlantList = MiddlePlantList;
+
+            else if ((*MiddlePlantList)->stats.height < Plant->stats.height + 1)
+                EndPlantList = MiddlePlantList;
+
+            else
+                break;
+        }
+
+        // Make sure it found it
+        MAIN_Plant **FoundPlant = NULL;
+
+        for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = (*TileList)->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.height == Plant->stats.height; --TempPlantList)
+            if (*TempPlantList == Plant)
+            {
+                FoundPlant = TempPlantList;
+                break;
+            }
+
+        if (FoundPlant == NULL)
+            for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = (*TileList)->plantList + (*TileList)->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.height == Plant->stats.height; ++TempPlantList)
+                if (*TempPlantList == Plant)
+                {
+                    FoundPlant = TempPlantList;
+                    break;
+                }
+
+        if (FoundPlant == NULL)
+        {
+            _MAIN_SetError(MAIN_ERRORID_GROWHEIGHT_INTILE, MAIN_ERRORMES_PLANTINTILE);
+            return false;
+        }
+
+        // Move it
+        for (MAIN_Plant **StartPlantList = (*TileList)->plantList; FoundPlant > StartPlantList && (*(FoundPlant - 1))->stats.height < Plant->stats.height + 1; --FoundPlant)
+            *FoundPlant = *(FoundPlant - 1);
+
+        *FoundPlant = Plant;
+    }
+
+    // Subtract energy, set new biomass and energy usage
+    ++Plant->stats.height;
+    Plant->stats.energy -= NeededEnergy;
+    Plant->stats.biomass = NewBiomass;
+    Plant->stats.energyUsage = MAIN_EnergyUsage(Plant);
+    
     return true;
 }
 
@@ -1904,10 +1970,13 @@ int main(int argc, char **argv)
 
     // Do the simulation
     bool Running = true;
+    uint64_t StartTime = clock();
+    uint64_t Steps = 10;
+    uint64_t SubSteps = 100000;
 
-    for (uint64_t Step = 0; Step < 10 && Running; ++Step)
+    for (uint64_t Step = 0; Step < Steps && Running; ++Step)
     {
-        for (uint64_t SubStep = 0; SubStep < 16 * 16; ++SubStep)
+        for (uint64_t SubStep = 0; SubStep < SubSteps; ++SubStep)
             if (!MAIN_Step(Map))
             {
                 printf("Error while doing a simulation step: %s\n", MAIN_GetError());
@@ -1918,7 +1987,10 @@ int main(int argc, char **argv)
         printf("PlantCount: %u\n", Map->plantCount);
     }
 
+    uint64_t EndTime = clock();
+
     printf("FinalPlantCount: %u\n", Map->plantCount);
+    printf("SimulationTime: %.2g s (%.2g s/step)\n", (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC, (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC / (double)(Steps * SubSteps));
 
     // Clean up
     MAIN_DestroyMap(Map);
