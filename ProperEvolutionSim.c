@@ -40,7 +40,8 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_SPAWN = 0x00090201,
     MAIN_ERRORID_STEP_GROWHEIGHT = 0x00090202,
     MAIN_ERRORID_STEP_GROWSIZE = 0x00090203,
-    MAIN_ERRORID_GROWHEIGHT_INTILE = 0x000A0200
+    MAIN_ERRORID_GROWHEIGHT_INTILE = 0x000A0200,
+    MAIN_ERRORID_GROWSIZE_ADDTOTILE = 0x000B0200
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
@@ -83,6 +84,14 @@ typedef struct __MAIN_Tile MAIN_Tile;
 typedef struct __MAIN_Plant MAIN_Plant;
 typedef struct __MAIN_Gene MAIN_Gene;
 typedef struct __MAIN_PlantStats MAIN_PlantStats;
+typedef enum __MAIN_Direction MAIN_Direction;
+
+enum __MAIN_Direction {
+    MAIN_DIR_POSX = 0,
+    MAIN_DIR_POSY = 1,
+    MAIN_DIR_NEGX = 2,
+    MAIN_DIR_NEGY = 3
+};
 
 struct __MAIN_Uint64Constraint {
     uint64_t min;    // The minimum allowed value
@@ -494,6 +503,9 @@ bool MAIN_GrowHeight(MAIN_Plant *Plant);
 
 // Grow in size
 bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant);
+
+// Gives the tile in the specified direction
+MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32_t y);
 
 
 // Init functions
@@ -997,21 +1009,21 @@ bool MAIN_AddToTile(MAIN_Tile *Tile, MAIN_Plant *Plant)
 bool MAIN_RemoveFromTile(MAIN_Tile *Tile, const MAIN_Plant *Plant)
 {
     // Find it in the plant list
-    MAIN_Plant **PlantList = Tile->plantList;
-
-    if (PlantList == NULL)
+    if (Tile->plantList == NULL)
     {
         _MAIN_SetError(MAIN_ERRORID_REMOVEFROMTILE_PLANTLIST, MAIN_ERRORMES_NULLPLANTLIST);
         return false;
     }
 
-    for (MAIN_Plant **EndPlantList = Tile->plantList + Tile->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
-    {
-        if ((*MiddlePlantList)->stats.height > Plant->stats.height)
-            PlantList = MiddlePlantList;
+    MAIN_Plant **PlantList = Tile->plantList + Tile->plantCount / 2;
 
-        else if ((*MiddlePlantList)->stats.height < Plant->stats.height)
-            EndPlantList = MiddlePlantList;
+    for (MAIN_Plant **StartPlantList = Tile->plantList - 1, **EndPlantList = Tile->plantList + Tile->plantCount; StartPlantList < EndPlantList - 1; PlantList = StartPlantList + (EndPlantList - StartPlantList) / 2)
+    {
+        if ((*PlantList)->stats.height > Plant->stats.height)
+            StartPlantList = PlantList;
+
+        else if ((*PlantList)->stats.height < Plant->stats.height)
+            EndPlantList = PlantList;
 
         else
             break;
@@ -1087,21 +1099,21 @@ bool MAIN_AddToMap(MAIN_Map *Map, MAIN_Plant *Plant)
 
 bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
 {
-    MAIN_Plant **PlantList = Map->plantList;
-
-    if (PlantList == NULL)
+    if (Map->plantList == NULL)
     {
         _MAIN_SetError(MAIN_ERRORID_REMOVEFROMMAP_PLANTLIST, MAIN_ERRORMES_NULLPLANTLIST);
         return false;
     }
 
-    for (MAIN_Plant **EndPlantList = Map->plantList + Map->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
-    {
-        if ((*MiddlePlantList)->stats.age > Plant->stats.age)
-            EndPlantList = MiddlePlantList;
+    MAIN_Plant **PlantList = Map->plantList + Map->plantCount / 2;
 
-        else if ((*MiddlePlantList)->stats.age < Plant->stats.age)
-            PlantList = MiddlePlantList;
+    for (MAIN_Plant **StartPlantList = Map->plantList - 1, **EndPlantList = Map->plantList + Map->plantCount; StartPlantList < EndPlantList - 1; PlantList = StartPlantList + (EndPlantList - StartPlantList) / 2)
+    {
+        if ((*PlantList)->stats.age < Plant->stats.age)
+            StartPlantList = PlantList;
+
+        else if ((*PlantList)->stats.age > Plant->stats.age)
+            EndPlantList = PlantList;
 
         else
             break;
@@ -1227,7 +1239,7 @@ uint32_t MAIN_Biomass(const MAIN_Plant *Plant)
 }
 
 bool MAIN_Step(MAIN_Map *Map)
-{
+{//if (Map->time >= 0 && Map->time % 1 == 0) printf("%lu\n", Map->time);
     // Increase timer
     ++Map->time;
 
@@ -1255,9 +1267,12 @@ bool MAIN_Step(MAIN_Map *Map)
     for (MAIN_Plant **PlantList = TempPlantList, **EndPlantList = TempPlantList + Tile->plantCount; PlantList < EndPlantList; ++PlantList)
     {
         // Give energy
-        uint64_t GetEnergy = (uint32_t)((double)Energy * (*PlantList)->gene.efficiency);
-        Energy -= GetEnergy;
-        (*PlantList)->stats.energy += GetEnergy;
+        if ((*PlantList)->stats.height > 0)
+        {
+            uint64_t GetEnergy = (uint32_t)((double)Energy * (*PlantList)->gene.efficiency);
+            Energy -= GetEnergy;
+            (*PlantList)->stats.energy += GetEnergy;
+        }
 
         // Take energy
         if ((*PlantList)->stats.energyUsage > (*PlantList)->stats.energy)
@@ -1287,7 +1302,7 @@ bool MAIN_Step(MAIN_Map *Map)
         }
 
         // Grow in height
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergyHeight && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateHeight)
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergyHeight && (*PlantList)->stats.height < (*PlantList)->gene.maxHeight && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateHeight)
             if (!MAIN_GrowHeight(*PlantList))
             {
                 _MAIN_AddError(MAIN_ERRORID_STEP_GROWHEIGHT, MAIN_ERRORMES_GROWHEIGHT);
@@ -1295,7 +1310,7 @@ bool MAIN_Step(MAIN_Map *Map)
             }
 
         // Grow in size
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && (*PlantList)->stats.size < (*PlantList)->gene.maxSize && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
             if (!MAIN_GrowSize(Tile, *PlantList))
             {
                 _MAIN_AddError(MAIN_ERRORID_STEP_GROWSIZE, MAIN_ERRORMES_GROWSIZE);
@@ -1330,15 +1345,15 @@ bool MAIN_GrowHeight(MAIN_Plant *Plant)
     for (MAIN_Tile **TileList = Plant->tileList, **EndTileList = Plant->tileList + Plant->stats.size; TileList < EndTileList; ++TileList)
     {
         // Find plant in plant list
-        MAIN_Plant **PlantList = (*TileList)->plantList;
+        MAIN_Plant **PlantList = (*TileList)->plantList + (*TileList)->plantCount / 2;
 
-        for (MAIN_Plant **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount, **MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2; PlantList < EndPlantList - 1; MiddlePlantList = PlantList + (EndPlantList - PlantList) / 2)
+        for (MAIN_Plant **StartPlantList = (*TileList)->plantList - 1, **EndPlantList = (*TileList)->plantList + (*TileList)->plantCount; StartPlantList < EndPlantList - 1; PlantList = StartPlantList + (EndPlantList - StartPlantList) / 2)
         {
-            if ((*MiddlePlantList)->stats.height > Plant->stats.height + 1)
-                PlantList = MiddlePlantList;
+            if ((*PlantList)->stats.height > Plant->stats.height)
+                StartPlantList = PlantList;
 
-            else if ((*MiddlePlantList)->stats.height < Plant->stats.height + 1)
-                EndPlantList = MiddlePlantList;
+            else if ((*PlantList)->stats.height < Plant->stats.height)
+                EndPlantList = PlantList;
 
             else
                 break;
@@ -1380,13 +1395,131 @@ bool MAIN_GrowHeight(MAIN_Plant *Plant)
     Plant->stats.energy -= NeededEnergy;
     Plant->stats.biomass = NewBiomass;
     Plant->stats.energyUsage = MAIN_EnergyUsage(Plant);
-    
+
     return true;
 }
 
 bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant)
 {
+    if (Plant->stats.height == 0)
+        return true;
+
+    // Calculate the energy needed
+    ++Plant->stats.size;
+    Plant->stats.maxEnergy += Plant->gene.maxTileEnergy;
+    uint32_t NewBiomass = MAIN_Biomass(Plant);
+    uint32_t NeededEnergy = NewBiomass - Plant->stats.biomass;
+    Plant->stats.maxEnergy -= Plant->gene.maxTileEnergy;
+    --Plant->stats.size;
+
+    // Test if it has enough energy
+    if (NeededEnergy > Plant->stats.energy)
+        return true;
+
+    // Find the next tile
+    MAIN_Tile *NewTile = NULL;
+
+    // Go through all directions and test if this plant is already there
+    for (uint8_t Direction = RNG_RandS(Plant->map->random) % 4, EndDirection = Direction + 4; Direction < EndDirection; ++Direction)
+    {
+        int32_t x = 0, y = 0;
+
+        switch (Direction % 4)
+        {
+            case (MAIN_DIR_POSX):
+                x = 1;
+                break;
+
+            case (MAIN_DIR_POSY):
+                y = 1;
+                break;
+
+            case (MAIN_DIR_NEGX):
+                x = -1;
+                break;
+
+            case (MAIN_DIR_NEGY):
+                y = -1;
+                break;
+            
+            default:
+                break;
+        }
+
+        MAIN_Tile *TestTile = MAIN_GetRelativeTile(Plant->map, Tile, x, y);
+
+        // Attempt to locate the plant
+        if (TestTile->plantCount == 0)
+        {
+            NewTile = TestTile;
+            break;
+        }
+
+        MAIN_Plant **PlantList = TestTile->plantList + TestTile->plantCount / 2;
+
+        for (MAIN_Plant **StartPlantList = TestTile->plantList - 1, **EndPlantList = TestTile->plantList + TestTile->plantCount; StartPlantList < EndPlantList - 1; PlantList = StartPlantList + (EndPlantList - StartPlantList) / 2)
+        {
+            if ((*PlantList)->stats.height > Plant->stats.height)
+                StartPlantList = PlantList;
+
+            else if ((*PlantList)->stats.height < Plant->stats.height)
+                EndPlantList = PlantList;
+
+            else
+                break;
+        }
+
+        // Make sure it found it
+        MAIN_Plant **FoundPlant = NULL;
+
+        for (MAIN_Plant **TempPlantList = PlantList, **StartTempPlantList = TestTile->plantList; TempPlantList >= StartTempPlantList && (*TempPlantList)->stats.height == Plant->stats.height; --TempPlantList)
+            if (*TempPlantList == Plant)
+            {
+                FoundPlant = TempPlantList;
+                break;
+            }
+
+        if (FoundPlant == NULL)
+            for (MAIN_Plant **TempPlantList = PlantList + 1, **EndTempPlantList = TestTile->plantList + TestTile->plantCount; TempPlantList < EndTempPlantList && (*TempPlantList)->stats.height == Plant->stats.height; ++TempPlantList)
+                if (*TempPlantList == Plant)
+                {
+                    FoundPlant = TempPlantList;
+                    break;
+                }
+
+        if (FoundPlant == NULL)
+        {
+            NewTile = TestTile;
+            break;
+        }
+    }
+
+    // Stop if there is no possible place for it
+    if (NewTile == NULL)
+        return true;
+
+    // Add it to the tile
+    if (!MAIN_AddToTile(NewTile, Plant))
+    {
+        _MAIN_AddError(MAIN_ERRORID_GROWSIZE_ADDTOTILE, MAIN_ERRORMES_ADDTOTILE);
+        return false;
+    }
+
+    // Remove energy
+    Plant->stats.energy -= NeededEnergy;
+
     return true;
+}
+
+MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32_t y)
+{
+    int32_t CurrentX = (Tile - Map->tiles) % Map->size.w;
+    int32_t CurrentY = (Tile - Map->tiles) / Map->size.w;
+
+    int32_t NewX = (CurrentX + x) % Map->size.w;
+    int32_t NewY = (CurrentY + y) % Map->size.h;
+
+    return Map->tiles + NewX + NewY * Map->size.w;
 }
 
 
@@ -1774,7 +1907,6 @@ void MAIN_CleanPlant(MAIN_Plant *Struct)
 {
     // Remove from tiles
     if (Struct->tileList != NULL)
-    {
         for (MAIN_Tile **TileList = Struct->tileList + Struct->stats.size - 1, **StartTileList = Struct->tileList; TileList >= StartTileList; --TileList)
             if (*TileList != NULL)
                 if (!MAIN_RemoveFromTile(*TileList, Struct))
@@ -1783,8 +1915,8 @@ void MAIN_CleanPlant(MAIN_Plant *Struct)
                     continue;
                 }
 
+    if (Struct->tileList != NULL)
         free(Struct->tileList);
-    }
 
     // Remove it from the map list
     if (Struct->map != NULL)
@@ -1969,24 +2101,44 @@ int main(int argc, char **argv)
     //printf("%u, %u, %u, %u\n", (*Map->plantList)->stats.energy, (*Map->plantList)->stats.maxEnergy, (*Map->plantList)->stats.energyUsage, (*Map->plantList)->stats.biomass);
 
     // Do the simulation
-    bool Running = true;
     uint64_t StartTime = clock();
-    uint64_t Steps = 10;
-    uint64_t SubSteps = 100000;
+    uint64_t Steps = 20;
+    uint64_t SubSteps = 10000;
 
-    for (uint64_t Step = 0; Step < Steps && Running; ++Step)
+    for (uint64_t Step = 0; Step < Steps; ++Step)
     {
         for (uint64_t SubStep = 0; SubStep < SubSteps; ++SubStep)
             if (!MAIN_Step(Map))
             {
                 printf("Error while doing a simulation step: %s\n", MAIN_GetError());
-                Running = false;
-                break;
+                return -1;
             }
 
-        printf("PlantCount: %u\n", Map->plantCount);
-    }
+        double Eff = 0;
+        uint32_t Size = 0;
+        uint32_t Height = 0;
+        uint32_t Volume = 0;
 
+        for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+        {
+            Eff += (*PlantList)->gene.efficiency;
+            Size += (*PlantList)->stats.size;
+            Height += (*PlantList)->stats.height;
+            Volume += (*PlantList)->stats.size * (*PlantList)->stats.height;
+        }
+
+        Eff /= Map->plantCount;
+        Size /= Map->plantCount;
+        Height /= Map->plantCount;
+        Volume /= Map->plantCount;
+
+        printf("PlantCount: %u - ", Map->plantCount);
+        printf("Efficiency: %.2f - ", Eff);
+        printf("Size: %u - ", Size);
+        printf("Height: %u - ", Height);
+        printf("Volume: %u\n", Volume);
+    }
+    
     uint64_t EndTime = clock();
 
     printf("FinalPlantCount: %u\n", Map->plantCount);

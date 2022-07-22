@@ -30,8 +30,8 @@ geneConstraints = {
     maxHeight = {
         min = 1;
         max = 0xFF;
-        mean = 100;
-        spread = 100;
+        mean = 25;
+        spread = 25;
     };
 
     maxSize = {
