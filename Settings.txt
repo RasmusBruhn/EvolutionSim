@@ -1,37 +1,44 @@
 killIlligal = true;
+killLow = true;
+spawnRange = 20000;
+spawnCount = 16;
+steps = 100;
+subSteps = 1000000;
 
 map = {
-    width = 16;
-    height = 16;
+    width = 128;
+    height = 128;
     minEnergy = 100;
     maxEnergy = 10000;
-    energyMethod = "const";
+    energyMethod = "cos";
+    energyNoise = 0.5;
 };
 
 init = {
-    count = 100;
-    seed = 42;
+    count = 1000;
+    seed = 8;
     energy = 10000;
 };
 
 energy = {
-    storageRate = 1e-2;
+    storageRate = 5e-3;
     storagePow = 1.;
-    baseRate = 1.;
-    heightPow = 1.;
-    sizePow = 0.5;
+    baseRate = 5.;
+    heightPow = 0.5;
+    sizePow = 0.;
     effPow = 1.;
-    growthBase = 100.;
-    growthStorage = 1.;
-    baseCost = 1;
+    growthBase = 0.5;
+    growthStorage = 2e-2;
+    baseCost = 100;
+    spawnEfficiency = 0.5;
 };
 
 geneConstraints = {
     maxHeight = {
         min = 1;
         max = 0xFF;
-        mean = 25;
-        spread = 25;
+        mean = 10;
+        spread = 10;
     };
 
     maxSize = {
@@ -65,15 +72,15 @@ geneConstraints = {
     minGrowthEnergyHeight = {
         min = 0;
         max = 0xFFFF;
-        mean = 1000;
-        spread = 1000;
+        mean = 500;
+        spread = 500;
     };
 
     minGrowthEnergySize = {
         min = 0;
         max = 0xFFFF;
-        mean = 1000;
-        spread = 1000;
+        mean = 500;
+        spread = 500;
     };
 
     spawnRate = {
@@ -86,34 +93,41 @@ geneConstraints = {
     minSpawnEnergy = {
         min = 0;
         max = 0xFFFF;
-        mean = 1000;
-        spread = 1000;
+        mean = 500;
+        spread = 500;
     };
 
     maxTileEnergy = {
         min = 1;
         max = 0xFFFFFFFF;
-        mean = 1000;
-        spread = 1000;
+        mean = 10000;
+        spread = 10000;
     };
 
     spawnEnergy = {
         min = 1;
         max = 0xFFFFFFFF;
-        mean = 100;
-        spread = 100;
+        mean = 1000;
+        spread = 1000;
+    };
+
+    maxSpawnEnergy = {
+        min = 1;
+        max = 0xFFFFFFFF;
+        mean = 1000;
+        spread = 1000;
     };
 
     spawnSize = {
         min = 1;
-        max = 0xFF;
+        max = 0x40;
         mean = 5;
         spread = 5;
     };
 
     spawnSpread = {
         min = 0;
-        max = 0xFF;
+        max = 0x3F;
         mean = 5;
         spread = 5;
     };

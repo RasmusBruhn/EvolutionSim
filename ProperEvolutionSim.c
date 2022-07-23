@@ -41,7 +41,8 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_GROWHEIGHT = 0x00090202,
     MAIN_ERRORID_STEP_GROWSIZE = 0x00090203,
     MAIN_ERRORID_GROWHEIGHT_INTILE = 0x000A0200,
-    MAIN_ERRORID_GROWSIZE_ADDTOTILE = 0x000B0200
+    MAIN_ERRORID_GROWSIZE_ADDTOTILE = 0x000B0200,
+    MAIN_ERRORID_SPAWN_CREATEPLANT = 0x000C0200
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
@@ -62,6 +63,7 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_SPAWN "An error occured while spawning new plants"
 #define MAIN_ERRORMES_GROWHEIGHT "An error occured while growing in height"
 #define MAIN_ERRORMES_GROWSIZE "An error occured while growing in size"
+#define MAIN_ERRORMES_CREATEPLANT "Unable to create plant"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -168,6 +170,7 @@ struct __MAIN_GeneConstraints {
     MAIN_Uint16Constraint minSpawnEnergy; // The minimum energy required to spawn
     MAIN_Uint32Constraint maxTileEnergy; // The maximum amount of energy allowed to store per tile
     MAIN_Uint32Constraint spawnEnergy; // The amount of energy to give each seed
+    MAIN_Uint32Constraint maxSpawnEnergy; // The maximum amount of energy to spent on spawning
     MAIN_Uint8Constraint spawnSize; // The average number of seeds per spawning
     MAIN_Uint8Constraint spawnSpread; // The spread of the number of seeds per spawning
     MAIN_FloatConstraint mutationRate; // The probability that a mutation occurs during spawning
@@ -180,6 +183,7 @@ struct __MAIN_MapSettings {
     uint32_t minEnergy; // The minimum energy production per tile
     uint32_t maxEnergy; // The maximum energy production per tile
     char *energyMethod; // The method to calculate the energy
+    double energyNoise; // How much noise is in the energy
 };
 
 struct __MAIN_InitialSettings {
@@ -198,6 +202,7 @@ struct __MAIN_EnergySettings {
     double growthBase; // The energy used in base growth
     double growthStorage; // The energy used in storage growth
     uint32_t baseCost; // A base cost that is added to any plant
+    double spawnEfficiency; // The efficiency of the energy given to the seeds
 };
 
 struct __MAIN_Settings {
@@ -206,6 +211,11 @@ struct __MAIN_Settings {
     MAIN_InitialSettings init;            // The settings for the initial population
     MAIN_EnergySettings energy;           // The settings for the energy usage
     bool killIlligal;                     // If true then it should kill any plant created with illigal genes, if false they should be trunctated
+    bool killLow;                         // If true then it will kill any plant with 0 energy
+    uint8_t spawnCount;                   // The maximum number of seeds per spawning
+    uint16_t spawnRange;                  // Determines how far seeds are spread
+    uint64_t steps;                       // The number of steps to print
+    uint64_t subSteps;                    // The number of sim steps per step
 };
 
 struct __MAIN_Size {
@@ -241,6 +251,7 @@ struct __MAIN_Gene {
     uint16_t minSpawnEnergy;        // The minimum energy required to spawn
     uint32_t maxTileEnergy;         // The maximum amount of energy allowed to store per tile
     uint32_t spawnEnergy;           // The amount of energy to give each seed
+    uint32_t maxSpawnEnergy;        // The amount of energy to take from the plant during spawning
     uint8_t spawnSize;             // The average number of seeds per spawning
     uint8_t spawnSpread;           // The spread of the number of seeds per spawning
     double mutationRate;            // The probability that a mutation occurs during spawning
@@ -266,11 +277,11 @@ struct __MAIN_Plant {
 
 // Settings translation tables
 #define MAIN_SETTINGSCONSTRAINTCOUNT 4
-#define MAIN_SETTINGSGENECONSTRAINTCOUNT 15
-#define MAIN_SETTINGSCOUNT 5
-#define MAIN_SETTINGSMAPCOUNT 5
+#define MAIN_SETTINGSGENECONSTRAINTCOUNT 16
+#define MAIN_SETTINGSCOUNT 10
+#define MAIN_SETTINGSMAPCOUNT 6
 #define MAIN_SETTINGSINITCOUNT 3
-#define MAIN_SETTINGSENERGYCOUNT 9
+#define MAIN_SETTINGSENERGYCOUNT 10
 
 SET_TranslationTable MAIN_SettingsTableUint64Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, min)},
@@ -347,6 +358,7 @@ SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECONSTRAIN
     {.name = "minSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, minSpawnEnergy), .size = sizeof(MAIN_Uint16Constraint), .sub = MAIN_SettingsTableUint16Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "maxTileEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxTileEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "spawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
+    {.name = "maxSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxSpawnEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "spawnSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSize), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "spawnSpread", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSpread), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "mutationRate", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationRate), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
@@ -358,7 +370,8 @@ SET_TranslationTable MAIN_SettingsTableMap[MAIN_SETTINGSMAPCOUNT] = {
     {.name = "height", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, height)},
     {.name = "minEnergy", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, minEnergy)},
     {.name = "maxEnergy", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_MapSettings, maxEnergy)},
-    {.name = "energyMethod", .type = SET_DATATYPE_STR, .depth = 0, .offset = offsetof(MAIN_MapSettings, energyMethod)}
+    {.name = "energyMethod", .type = SET_DATATYPE_STR, .depth = 0, .offset = offsetof(MAIN_MapSettings, energyMethod)},
+    {.name = "energyNoise", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_MapSettings, energyNoise)}
 };
 
 SET_TranslationTable MAIN_SettingsTableInit[MAIN_SETTINGSINITCOUNT] = {
@@ -376,7 +389,8 @@ SET_TranslationTable MAIN_SettingsTableEnergy[MAIN_SETTINGSENERGYCOUNT] = {
     {.name = "effPow", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, effPow)},
     {.name = "growthBase", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthBase)},
     {.name = "growthStorage", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, growthStorage)},
-    {.name = "baseCost", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_EnergySettings, baseCost)}
+    {.name = "baseCost", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_EnergySettings, baseCost)},
+    {.name = "spawnEfficiency", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, spawnEfficiency)}
 };
 
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
@@ -384,7 +398,12 @@ SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
     {.name = "map", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, map), .size = sizeof(MAIN_MapSettings), .sub = MAIN_SettingsTableMap, .count = MAIN_SETTINGSMAPCOUNT},
     {.name = "init", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, init), .size = sizeof(MAIN_InitialSettings), .sub = MAIN_SettingsTableInit, .count = MAIN_SETTINGSINITCOUNT},
     {.name = "energy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, energy), .size = sizeof(MAIN_EnergySettings), .sub = MAIN_SettingsTableEnergy, .count = MAIN_SETTINGSENERGYCOUNT},
-    {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)}
+    {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)},
+    {.name = "killLow", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killLow)},
+    {.name = "spawnCount", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_Settings, spawnCount)},
+    {.name = "spawnRange", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_Settings, spawnRange)},
+    {.name = "steps", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Settings, steps)},
+    {.name = "subSteps", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Settings, subSteps)}
 };
 
 // Energy method names
@@ -495,8 +514,8 @@ uint32_t MAIN_Biomass(const MAIN_Plant *Plant);
 // Does one step of the evolution
 bool MAIN_Step(MAIN_Map *Map);
 
-// Create spawn from a tree, if positive the plant died, if negative it was an error
-int8_t MAIN_Spawn(const MAIN_Tile *Tile, MAIN_Plant *Parent);
+// Create spawn from a plant
+bool MAIN_Spawn(MAIN_Tile *Tile, MAIN_Plant *Parent);
 
 // Grow in height
 bool MAIN_GrowHeight(MAIN_Plant *Plant);
@@ -782,6 +801,7 @@ void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene)
     Gene->minSpawnEnergy = MAIN_GenerateUint16(&Map->settings->geneConstraints.minSpawnEnergy, &Map->random);
     Gene->maxTileEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
     Gene->spawnEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
+    Gene->maxSpawnEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.maxSpawnEnergy, &Map->random);
     Gene->spawnSize = MAIN_GenerateUint8(&Map->settings->geneConstraints.spawnSize, &Map->random);
     Gene->spawnSpread = MAIN_GenerateUint8(&Map->settings->geneConstraints.spawnSpread, &Map->random);
     Gene->mutationRate = MAIN_GenerateFloat(&Map->settings->geneConstraints.mutationRate, &Map->random);
@@ -956,6 +976,7 @@ bool MAIN_TruncateGene(const MAIN_Settings *Settings, MAIN_Gene *Gene)
     Return |= MAIN_TruncateUint16(&Settings->geneConstraints.minSpawnEnergy, &Gene->minSpawnEnergy);
     Return |= MAIN_TruncateUint32(&Settings->geneConstraints.maxTileEnergy, &Gene->maxTileEnergy);
     Return |= MAIN_TruncateUint32(&Settings->geneConstraints.spawnEnergy, &Gene->spawnEnergy);
+    Return |= MAIN_TruncateUint32(&Settings->geneConstraints.maxSpawnEnergy, &Gene->maxSpawnEnergy);
     Return |= MAIN_TruncateUint8(&Settings->geneConstraints.spawnSize, &Gene->spawnSize);
     Return |= MAIN_TruncateUint8(&Settings->geneConstraints.spawnSpread, &Gene->spawnSpread);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.mutationRate, &Gene->mutationRate);
@@ -1089,7 +1110,7 @@ bool MAIN_AddToMap(MAIN_Map *Map, MAIN_Plant *Plant)
     // Move other plants to find position
     MAIN_Plant **PlantList = NewPlantList + Map->plantCount++;
 
-    for (; PlantList > NewPlantList && (*(PlantList - 1))->stats.age > Plant->stats.height; --PlantList)
+    for (; PlantList > NewPlantList && (*(PlantList - 1))->stats.age > Plant->stats.age; --PlantList)
         *PlantList = *(PlantList - 1);
 
     *PlantList = Plant;
@@ -1223,10 +1244,27 @@ bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint32_t Energy, const MAI
     Plant->stats.energyUsage = MAIN_EnergyUsage(Plant);
 
     // Set energy
-    Plant->stats.energy = Energy;
+    if (Energy > ParentGene->spawnEnergy)
+        Energy = ParentGene->spawnEnergy;
+
+    // Remove biomass from it
+    if (Plant->stats.biomass > Energy)
+    {
+        MAIN_DestroyPlant(Plant);
+        return true;
+    }
+
+    Plant->stats.energy = Energy - Plant->stats.biomass;
 
     if (Plant->stats.energy > Plant->stats.maxEnergy)
         Plant->stats.energy = Plant->stats.maxEnergy;
+
+    // Make sure it can survive
+    if (Plant->stats.energy < Plant->gene.minGrowthEnergyHeight + Plant->stats.energyUsage)
+    {
+        MAIN_DestroyPlant(Plant);
+        return true;
+    }
 
     return true;
 }
@@ -1239,7 +1277,7 @@ uint32_t MAIN_Biomass(const MAIN_Plant *Plant)
 }
 
 bool MAIN_Step(MAIN_Map *Map)
-{//if (Map->time >= 0 && Map->time % 1 == 0) printf("%lu\n", Map->time);
+{
     // Increase timer
     ++Map->time;
 
@@ -1250,7 +1288,7 @@ bool MAIN_Step(MAIN_Map *Map)
         return true;
 
     // Get energy
-    uint64_t Energy = Tile->energy;
+    uint32_t Energy = (uint32_t)((double)Tile->energy * (1 - RNG_RandSf(Map->random) * Map->settings->map.energyNoise));
 
     // Copy plant list
     MAIN_Plant **TempPlantList = (MAIN_Plant **)malloc(sizeof(MAIN_Plant *) * Tile->plantCount);
@@ -1272,6 +1310,8 @@ bool MAIN_Step(MAIN_Map *Map)
             uint64_t GetEnergy = (uint32_t)((double)Energy * (*PlantList)->gene.efficiency);
             Energy -= GetEnergy;
             (*PlantList)->stats.energy += GetEnergy;
+            if ((*PlantList)->stats.energy > (*PlantList)->stats.maxEnergy)
+                (*PlantList)->stats.energy = (*PlantList)->stats.maxEnergy;
         }
 
         // Take energy
@@ -1283,24 +1323,6 @@ bool MAIN_Step(MAIN_Map *Map)
 
         (*PlantList)->stats.energy -= (*PlantList)->stats.energyUsage;
 
-        // Spawn
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minSpawnEnergy && RNG_RandSf(Map->random) < (*PlantList)->gene.spawnRate)
-        {
-            int8_t ReturnValue = MAIN_Spawn(Tile, *PlantList);
-
-            if (ReturnValue < 0)
-            {
-                _MAIN_AddError(MAIN_ERRORID_STEP_SPAWN, MAIN_ERRORMES_SPAWN);
-                return false;
-            }
-
-            else if (ReturnValue > 0)
-            {
-                MAIN_DestroyPlant(*PlantList);
-                continue;
-            }
-        }
-
         // Grow in height
         if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergyHeight && (*PlantList)->stats.height < (*PlantList)->gene.maxHeight && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateHeight)
             if (!MAIN_GrowHeight(*PlantList))
@@ -1309,13 +1331,35 @@ bool MAIN_Step(MAIN_Map *Map)
                 return false;
             }
 
+        // Kill if it did not grow
+        if ((*PlantList)->stats.height == 0)
+        {
+            MAIN_DestroyPlant(*PlantList);
+            continue;
+        }
+
         // Grow in size
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && (*PlantList)->stats.size < (*PlantList)->gene.maxSize && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && (*PlantList)->stats.size < (*PlantList)->gene.maxSize && (*PlantList)->stats.height > 0 && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
             if (!MAIN_GrowSize(Tile, *PlantList))
             {
                 _MAIN_AddError(MAIN_ERRORID_STEP_GROWSIZE, MAIN_ERRORMES_GROWSIZE);
                 return false;
             }
+    
+        // Spawn
+        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minSpawnEnergy && (*PlantList)->stats.height > 0 && RNG_RandSf(Map->random) < (*PlantList)->gene.spawnRate)
+            if (!MAIN_Spawn(Tile, *PlantList))
+            {
+                _MAIN_AddError(MAIN_ERRORID_STEP_SPAWN, MAIN_ERRORMES_SPAWN);
+                return false;
+            }
+
+        // Kill if it has no energy
+        if (Map->settings->killLow && (*PlantList)->stats.energy == 0)
+        {
+            MAIN_DestroyPlant(*PlantList);
+            continue;
+        }
     }
 
     // Free copy of plant list
@@ -1324,9 +1368,67 @@ bool MAIN_Step(MAIN_Map *Map)
     return true;
 }
 
-int8_t MAIN_Spawn(const MAIN_Tile *Tile, MAIN_Plant *Parent)
+bool MAIN_Spawn(MAIN_Tile *Tile, MAIN_Plant *Parent)
 {
-    return 0;
+    // Take the energy
+    uint32_t Energy = Parent->gene.maxSpawnEnergy;
+
+    if (Energy > Parent->gene.spawnEnergy * Parent->map->settings->spawnCount)
+        Energy = Parent->gene.spawnEnergy * Parent->map->settings->spawnCount;
+
+    if (Energy > Parent->stats.energy)
+        Energy = Parent->stats.energy;
+
+    Parent->stats.energy -= Energy;
+
+    while (Energy > 0)
+    {
+        // Get how much energy to use
+        uint32_t UseEnergy = Parent->gene.spawnEnergy;
+
+        if (UseEnergy > Energy)
+            UseEnergy = Energy;
+
+        Energy -= UseEnergy;
+
+        // Get the tile
+        int32_t Range = Parent->map->settings->spawnRange / UseEnergy;
+        MAIN_Tile *NewTile = MAIN_GetRelativeTile(Parent->map, Tile, (RNG_RandS(Parent->map->random) % (2 * Range + 1)) - Range, (RNG_RandS(Parent->map->random) % (2 * Range + 1)) - Range);
+
+        if (!MAIN_CreatePlant(Parent->map, NewTile, (uint32_t)((double)UseEnergy * Parent->map->settings->energy.spawnEfficiency), &Parent->gene))
+        {
+            _MAIN_AddError(MAIN_ERRORID_SPAWN_CREATEPLANT, MAIN_ERRORMES_CREATEPLANT);
+            return false;
+        }
+    }
+    
+/*
+    // Figure out how many children to make
+    int8_t ChildCount = Parent->gene.spawnSize - Parent->gene.spawnSpread + (RNG_RandS(Parent->map->random) % (2 * Parent->gene.spawnSpread + 1));
+
+    for (int8_t ChildNum = 0; ChildNum < ChildCount && Parent->stats.energy > 0; ++ChildNum)
+    {
+        // Get the energy
+        uint32_t Energy = Parent->gene.spawnEnergy;
+
+        if (Energy > Parent->stats.energy)
+            Energy = Parent->stats.energy;
+
+        // Get the tile
+        int32_t Range = Parent->map->settings->spawnRange / Energy;
+        MAIN_Tile *NewTile = MAIN_GetRelativeTile(Parent->map, Tile, (RNG_RandS(Parent->map->random) % (2 * Range + 1)) - Range, (RNG_RandS(Parent->map->random) % (2 * Range + 1)) - Range);
+
+        if (!MAIN_CreatePlant(Parent->map, NewTile, (uint32_t)((double)Energy * Parent->map->settings->energy.spawnEfficiency), &Parent->gene))
+        {
+            _MAIN_AddError(MAIN_ERRORID_SPAWN_CREATEPLANT, MAIN_ERRORMES_CREATEPLANT);
+            return false;
+        }
+
+        // Remove energy
+        Parent->stats.energy -= Energy;
+    }*/
+    
+    return true;
 }
 
 bool MAIN_GrowHeight(MAIN_Plant *Plant)
@@ -1652,6 +1754,11 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->spawnEnergy.mean = 100;
     Struct->spawnEnergy.spread = 100;
 
+    Struct->maxSpawnEnergy.min = 1;
+    Struct->maxSpawnEnergy.max = 0xFFFFFFFF;
+    Struct->maxSpawnEnergy.mean = 100;
+    Struct->maxSpawnEnergy.spread = 100;
+
     Struct->spawnSize.min = 1;
     Struct->spawnSize.max = 0xFF;
     Struct->spawnSize.mean = 5;
@@ -1679,8 +1786,9 @@ void MAIN_InitMapSettings(MAIN_MapSettings *Struct)
     Struct->width = 128;
     Struct->minEnergy = 1000;
     Struct->maxEnergy = 10000;
+    Struct->energyNoise = 0.2;
     Struct->energyMethod = (char *)malloc(sizeof(char) * (strlen(MAIN_ENERGYMETHOD_CONST) + 1));
-    
+
     if (Struct->energyMethod != NULL)
         strcpy(Struct->energyMethod, MAIN_ENERGYMETHOD_CONST);
 }   
@@ -1703,6 +1811,7 @@ void MAIN_InitEnergySettings(MAIN_EnergySettings *Struct)
     Struct->growthBase = 100.;
     Struct->growthStorage = 1.;
     Struct->baseCost = 1;
+    Struct->spawnEfficiency = 0.5;
 }
 
 void MAIN_InitSettings(MAIN_Settings *Struct)
@@ -1712,6 +1821,11 @@ void MAIN_InitSettings(MAIN_Settings *Struct)
     MAIN_InitInitialSettings(&Struct->init);
     MAIN_InitEnergySettings(&Struct->energy);
     Struct->killIlligal = true;
+    Struct->killLow = true;
+    Struct->spawnRange = 250;
+    Struct->spawnCount = 16;
+    Struct->steps = 10;
+    Struct->subSteps = 100000;
 }
 
 void MAIN_InitMap(MAIN_Map *Struct)
@@ -1764,6 +1878,7 @@ void MAIN_InitGene(MAIN_Gene *Struct)
     Struct->mutationAttempts = 0;
     Struct->mutationRate = 0.;
     Struct->spawnEnergy = 0;
+    Struct->maxSpawnEnergy = 0;
     Struct->spawnRate = 0.;
     Struct->spawnSize = 0;
     Struct->spawnSpread = 0;
@@ -2102,12 +2217,10 @@ int main(int argc, char **argv)
 
     // Do the simulation
     uint64_t StartTime = clock();
-    uint64_t Steps = 20;
-    uint64_t SubSteps = 10000;
 
-    for (uint64_t Step = 0; Step < Steps; ++Step)
+    for (uint64_t Step = 0; Step < Settings->steps; ++Step)
     {
-        for (uint64_t SubStep = 0; SubStep < SubSteps; ++SubStep)
+        for (uint64_t SubStep = 0; SubStep < Settings->subSteps; ++SubStep)
             if (!MAIN_Step(Map))
             {
                 printf("Error while doing a simulation step: %s\n", MAIN_GetError());
@@ -2116,33 +2229,137 @@ int main(int argc, char **argv)
 
         double Eff = 0;
         uint32_t Size = 0;
+        uint32_t MaxSize = 0;
+        uint32_t MinEnergySize = 0;
+        double SizeRate = 0.;
+        double SizeLevel = 0.;
         uint32_t Height = 0;
+        uint32_t MaxHeight = 0;
+        uint32_t MinEnergyHeight = 0;
+        double HeightRate = 0.;
+        double HeightLevel = 0.;
         uint32_t Volume = 0;
+        uint32_t Storage = 0;
+        uint32_t Energy = 0;
+        uint32_t Count = 0;
+        uint32_t Biomass = 0;
+        uint32_t Biomass1 = 0;
+        uint32_t Biomass2 = 0;
+        uint32_t Age = 0;
+        uint32_t Usage = 0;
+        uint32_t Usage1 = 0;
+        uint32_t Usage2 = 0;
+        double FillLevel = 0.;
+        uint32_t SizeCount = 0;
+        uint32_t SizeCount2 = 0;
+        double MutationRate = 0.;
+        uint32_t MutationSize = 0;
+        uint32_t SpawnCount = 0;
+        uint32_t SpawnSpread = 0;
+        uint32_t MinEnergySpawn = 0;
+        uint32_t SpawnEnergy = 0;
+        uint32_t MaxSpawnEnergy = 0;
+        double SpawnRate = 0.;
 
         for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
         {
-            Eff += (*PlantList)->gene.efficiency;
-            Size += (*PlantList)->stats.size;
-            Height += (*PlantList)->stats.height;
-            Volume += (*PlantList)->stats.size * (*PlantList)->stats.height;
+            if ((*PlantList)->stats.height > 0)
+            {
+                Eff += (*PlantList)->gene.efficiency;
+                Size += (*PlantList)->stats.size;
+                MaxSize += (*PlantList)->gene.maxSize;
+                MinEnergySize += (*PlantList)->gene.minGrowthEnergySize;
+                SizeRate += (*PlantList)->gene.growthRateSize;
+                SizeLevel += (double)(*PlantList)->stats.size / (double)(*PlantList)->gene.maxSize;
+                Height += (*PlantList)->stats.height;
+                MaxHeight += (*PlantList)->gene.maxHeight;
+                MinEnergyHeight += (*PlantList)->gene.minGrowthEnergyHeight;
+                HeightRate += (*PlantList)->gene.growthRateHeight;
+                HeightLevel += (double)(*PlantList)->stats.height / (double)(*PlantList)->gene.maxHeight;
+                Volume += (*PlantList)->stats.size * (*PlantList)->stats.height;
+                Storage += (*PlantList)->stats.maxEnergy;
+                Energy += (*PlantList)->stats.energy;
+                Biomass += (*PlantList)->stats.biomass;
+                Biomass1 += (uint32_t)((double)(*PlantList)->stats.maxEnergy * Settings->energy.growthStorage);
+                Biomass2 += (uint32_t)((double)((*PlantList)->stats.height * (*PlantList)->stats.size) * exp(1. / (1. - (double)(*PlantList)->gene.efficiency) * Settings->energy.effPow) * Settings->energy.growthBase);
+                Age += Map->time - (*PlantList)->stats.age;
+                Usage += (*PlantList)->stats.energyUsage;
+                Usage1 += (uint32_t)(Settings->energy.storageRate * pow((double)(*PlantList)->stats.maxEnergy, Settings->energy.storagePow));
+                Usage2 += (uint32_t)(Settings->energy.baseRate * pow((double)(*PlantList)->stats.height, Settings->energy.heightPow) * pow((double)(*PlantList)->stats.size, Settings->energy.sizePow) * exp(1. / (1. - (double)(*PlantList)->gene.efficiency) * Settings->energy.effPow));
+                FillLevel += (double)(*PlantList)->stats.energy / (double)(*PlantList)->stats.maxEnergy;
+                if ((*PlantList)->stats.energy > (*PlantList)->stats.maxEnergy) printf("Test: %u, %u\n", (*PlantList)->stats.energy, (*PlantList)->stats.maxEnergy);
+                MutationRate += (*PlantList)->gene.mutationRate;
+                MutationSize += (*PlantList)->gene.mutationAttempts;
+                SpawnCount += (*PlantList)->gene.spawnSize;
+                SpawnSpread += (*PlantList)->gene.spawnSpread;
+                MinEnergySpawn += (*PlantList)->gene.minSpawnEnergy;
+                SpawnEnergy += ((*PlantList)->gene.spawnEnergy > 10000) ? (10000) : ((*PlantList)->gene.spawnEnergy);
+                SpawnRate += (*PlantList)->gene.spawnRate;
+                MaxSpawnEnergy += ((*PlantList)->gene.maxSpawnEnergy > 10000) ? (10000) : ((*PlantList)->gene.maxSpawnEnergy);
+                ++Count;
+            }
+
+            SizeCount += (*PlantList)->stats.size;
         }
 
-        Eff /= Map->plantCount;
-        Size /= Map->plantCount;
-        Height /= Map->plantCount;
-        Volume /= Map->plantCount;
+        for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; ++TileList)
+            SizeCount2 += TileList->plantCount;
 
-        printf("PlantCount: %u - ", Map->plantCount);
+        if (Count > 0)
+        {
+            Age /= Count;
+            Eff /= Count;
+            Size /= Count;
+            MaxSize /= Count;
+            MinEnergySize /= Count;
+            SizeRate /= (double)Count;
+            SizeLevel /= (double)Count;
+            Height /= Count;
+            MaxHeight /= Count;
+            MinEnergyHeight /= Count;
+            HeightRate /= (double)Count;
+            HeightLevel /= (double)Count;
+            Volume /= Count;
+            Storage /= Count;
+            Usage /= Count;
+            Usage1 /= Count;
+            Usage2 /= Count;
+            Energy /= Count;
+            Biomass /= Count;
+            Biomass1 /= Count;
+            Biomass2 /= Count;
+            FillLevel /= (double)Count;
+            MutationRate /= (double)Count;
+            MutationSize /= Count;
+            SpawnCount /= Count;
+            SpawnSpread /= Count;
+            SpawnEnergy /= Count;
+            MinEnergySpawn /= Count;
+            SpawnRate /= (double)Count;
+            MaxSpawnEnergy /= Count;
+        }
+
+        printf("PlantCount: %u/%u - ", Map->plantCount, Count);
+        printf("SizeCount: %u/%u - ", SizeCount, SizeCount2);
+        printf("Age: %u\n", Age);
+
         printf("Efficiency: %.2f - ", Eff);
-        printf("Size: %u - ", Size);
-        printf("Height: %u - ", Height);
+        printf("Size: %u/%u(%.2f)[%u/%.2f] - ", Size, MaxSize, SizeLevel, MinEnergySize, SizeRate);
+        printf("Height: %u/%u(%.2f)[%u/%.2f] - ", Height, MaxHeight, HeightLevel, MinEnergyHeight, HeightRate);
         printf("Volume: %u\n", Volume);
+        printf("Energy: %u - ", Energy);
+        printf("Usage: %u[%u/%u] - ", Usage, Usage1, Usage2);
+        printf("Storage: %u - ", Storage);
+        printf("Level: %.2g - ", FillLevel);
+        printf("Biomass: %u[%u/%u]\n", Biomass, Biomass1, Biomass2);
+        printf("Spawn: %u/%u[%u/%.2f] - ", SpawnEnergy, MaxSpawnEnergy, MinEnergySpawn, SpawnRate);
+        printf("Mutation: %u/%.2f\n\n", MutationSize, MutationRate);
     }
     
     uint64_t EndTime = clock();
 
     printf("FinalPlantCount: %u\n", Map->plantCount);
-    printf("SimulationTime: %.2g s (%.2g s/step)\n", (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC, (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC / (double)(Steps * SubSteps));
+    printf("SimulationTime: %.2g s (%.2g s/step)\n", (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC, (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC / (double)(Settings->steps * Settings->subSteps));
 
     // Clean up
     MAIN_DestroyMap(Map);
