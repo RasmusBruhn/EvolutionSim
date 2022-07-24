@@ -106,6 +106,16 @@ typedef struct __MAIN_Plant MAIN_Plant;
 typedef struct __MAIN_Gene MAIN_Gene;
 typedef struct __MAIN_PlantStats MAIN_PlantStats;
 typedef struct __MAIN_Filter MAIN_Filter;
+typedef struct __MAIN_LogUint8Settings MAIN_LogUint8Settings;
+typedef struct __MAIN_LogUint16Settings MAIN_LogUint16Settings;
+typedef struct __MAIN_LogUint32Settings MAIN_LogUint32Settings;
+typedef struct __MAIN_LogUint64Settings MAIN_LogUint64Settings;
+typedef struct __MAIN_LogInt8Settings MAIN_LogInt8Settings;
+typedef struct __MAIN_LogInt16Settings MAIN_LogInt16Settings;
+typedef struct __MAIN_LogInt32Settings MAIN_LogInt32Settings;
+typedef struct __MAIN_LogInt64Settings MAIN_LogInt64Settings;
+typedef struct __MAIN_LogFloatSettings MAIN_LogFloatSettings;
+typedef struct __MAIN_HistLogSettings MAIN_HistLogSettings;
 typedef enum __MAIN_Direction MAIN_Direction;
 
 enum __MAIN_Direction {
@@ -191,8 +201,6 @@ struct __MAIN_GeneConstraints {
     MAIN_Uint32Constraint maxTileEnergy; // The maximum amount of energy allowed to store per tile
     MAIN_Uint32Constraint spawnEnergy; // The amount of energy to give each seed
     MAIN_Uint32Constraint maxSpawnEnergy; // The maximum amount of energy to spent on spawning
-    MAIN_Uint8Constraint spawnSize; // The average number of seeds per spawning
-    MAIN_Uint8Constraint spawnSpread; // The spread of the number of seeds per spawning
     MAIN_FloatConstraint mutationRate; // The probability that a mutation occurs during spawning
     MAIN_Uint8Constraint mutationAttempts; // The number of attempts to do a mutation during spawning
 };
@@ -225,11 +233,101 @@ struct __MAIN_EnergySettings {
     double spawnEfficiency; // The efficiency of the energy given to the seeds
 };
 
+struct __MAIN_LogUint8Settings {
+    bool active; // If true, this field will be logged
+    uint8_t min; // The min value in the histogram
+    uint8_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogUint16Settings {
+    bool active; // If true, this field will be logged
+    uint16_t min; // The min value in the histogram
+    uint16_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogUint32Settings {
+    bool active; // If true, this field will be logged
+    uint32_t min; // The min value in the histogram
+    uint32_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogUint64Settings {
+    bool active; // If true, this field will be logged
+    uint64_t min; // The min value in the histogram
+    uint64_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogInt8Settings {
+    bool active; // If true, this field will be logged
+    int8_t min; // The min value in the histogram
+    int8_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogInt16Settings {
+    bool active; // If true, this field will be logged
+    int16_t min; // The min value in the histogram
+    int16_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogInt32Settings {
+    bool active; // If true, this field will be logged
+    int32_t min; // The min value in the histogram
+    int32_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogInt64Settings {
+    bool active; // If true, this field will be logged
+    int64_t min; // The min value in the histogram
+    int64_t max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_LogFloatSettings {
+    bool active; // If true, this field will be logged
+    double min; // The min value in the histogram
+    double max; // The max value in the histogram
+    uint16_t bins; // The number of bins to use
+};
+
+struct __MAIN_HistLogSettings {
+    uint64_t period; // How often it should log, if 0 then never log
+    char *name; // The base name of the file, full name will be [name]_[fieldName]_[Count].csv
+    MAIN_LogUint8Settings maxHeight; // The maximum height of the plant
+    MAIN_LogUint8Settings maxSize; // The maximum size of the plant
+    MAIN_LogFloatSettings efficiency; // The effieciency at collecting energy
+    MAIN_LogFloatSettings growthRateHeight; // The probability the plant will grow in height if it can
+    MAIN_LogFloatSettings growthRateSize; // The probability the plant will grow in size if it can
+    MAIN_LogUint16Settings minGrowthEnergyHeight; // The minimum energy required to grow in height
+    MAIN_LogUint16Settings minGrowthEnergySize; // The minimum energy required to grow in size
+    MAIN_LogFloatSettings spawnRate; // The probability of spawning if it can
+    MAIN_LogUint16Settings minSpawnEnergy; // The minimum energy required to spawn
+    MAIN_LogUint32Settings maxTileEnergy; // The maximum amount of energy allowed to store per tile
+    MAIN_LogUint32Settings spawnEnergy; // The amount of energy to give each seed
+    MAIN_LogUint32Settings maxSpawnEnergy; // The maximum amount of energy to spent on spawning
+    MAIN_LogFloatSettings mutationRate; // The probability that a mutation occurs during spawning
+    MAIN_LogUint8Settings mutationAttempts; // The number of attempts to do a mutation during spawning
+    MAIN_LogUint8Settings size; // The size of the plant
+    MAIN_LogUint8Settings height; // The height of the plant
+    MAIN_LogUint32Settings energy; // The energy storage of the plant
+    MAIN_LogUint64Settings age; // At what random tick it was born
+    MAIN_LogUint32Settings energyUsage; // The amount of energy to use per turn
+    MAIN_LogUint32Settings maxEnergy; // The maximum amount of energy the plant can store
+    MAIN_LogUint32Settings biomass; // The biomass of the plant
+};
+
 struct __MAIN_Settings {
     MAIN_GeneConstraints geneConstraints; // All the gene constraints
     MAIN_MapSettings map;                 // All the map settings
     MAIN_InitialSettings init;            // The settings for the initial population
     MAIN_EnergySettings energy;           // The settings for the energy usage
+    MAIN_HistLogSettings histLog;         // The settings for the hist log
     bool killIlligal;                     // If true then it should kill any plant created with illigal genes, if false they should be trunctated
     bool killLow;                         // If true then it will kill any plant with 0 energy
     uint8_t spawnCount;                   // The maximum number of seeds per spawning
@@ -301,11 +399,13 @@ struct __MAIN_Filter {
 
 // Settings translation tables
 #define MAIN_SETTINGSCONSTRAINTCOUNT 4
-#define MAIN_SETTINGSGENECONSTRAINTCOUNT 16
-#define MAIN_SETTINGSCOUNT 10
+#define MAIN_SETTINGSGENECONSTRAINTCOUNT 14
+#define MAIN_SETTINGSCOUNT 11
 #define MAIN_SETTINGSMAPCOUNT 6
 #define MAIN_SETTINGSINITCOUNT 3
 #define MAIN_SETTINGSENERGYCOUNT 10
+#define MAIN_SETTINGSLOGTYPECOUNT 4
+#define MAIN_SETTINGSHISTLOGCOUNT 23
 
 SET_TranslationTable MAIN_SettingsTableUint64Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, min)},
@@ -383,8 +483,6 @@ SET_TranslationTable MAIN_SettingsTableGeneConstrains[MAIN_SETTINGSGENECONSTRAIN
     {.name = "maxTileEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxTileEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "spawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "maxSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, maxSpawnEnergy), .size = sizeof(MAIN_Uint32Constraint), .sub = MAIN_SettingsTableUint32Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "spawnSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSize), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
-    {.name = "spawnSpread", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, spawnSpread), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "mutationRate", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationRate), .size = sizeof(MAIN_FloatConstraint), .sub = MAIN_SettingsTableFloatConstraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT},
     {.name = "mutationAttempts", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_GeneConstraints, mutationAttempts), .size = sizeof(MAIN_Uint8Constraint), .sub = MAIN_SettingsTableUint8Constraint, .count = MAIN_SETTINGSCONSTRAINTCOUNT}
 };
@@ -417,11 +515,101 @@ SET_TranslationTable MAIN_SettingsTableEnergy[MAIN_SETTINGSENERGYCOUNT] = {
     {.name = "spawnEfficiency", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_EnergySettings, spawnEfficiency)}
 };
 
+SET_TranslationTable MAIN_SettingsTableLogUint8[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogUint8Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_LogUint8Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_LogUint8Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogUint8Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogUint16[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogUint16Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogUint16Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogUint16Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogUint16Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogUint32[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogUint32Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_LogUint32Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_LogUint32Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogUint32Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogUint64[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogUint64Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_LogUint64Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_LogUint64Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogUint64Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogInt8[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogInt8Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_INT8, .depth = 0, .offset = offsetof(MAIN_LogInt8Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_INT8, .depth = 0, .offset = offsetof(MAIN_LogInt8Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogInt8Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogInt16[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogInt16Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_INT16, .depth = 0, .offset = offsetof(MAIN_LogInt16Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_INT16, .depth = 0, .offset = offsetof(MAIN_LogInt16Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogInt16Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogInt32[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogInt32Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_INT32, .depth = 0, .offset = offsetof(MAIN_LogInt32Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_INT32, .depth = 0, .offset = offsetof(MAIN_LogInt32Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogInt32Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogInt64[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogInt64Settings, active)},
+    {.name = "min", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_LogInt64Settings, min)},
+    {.name = "max", .type = SET_DATATYPE_INT64, .depth = 0, .offset = offsetof(MAIN_LogInt64Settings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogInt64Settings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableLogFloat[MAIN_SETTINGSLOGTYPECOUNT] = {
+    {.name = "active", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_LogFloatSettings, active)},
+    {.name = "min", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_LogFloatSettings, min)},
+    {.name = "max", .type = SET_DATATYPE_DOUBLE, .depth = 0, .offset = offsetof(MAIN_LogFloatSettings, max)},
+    {.name = "bins", .type = SET_DATATYPE_UINT16, .depth = 0, .offset = offsetof(MAIN_LogFloatSettings, bins)}
+};
+
+SET_TranslationTable MAIN_SettingsTableHistLog[MAIN_SETTINGSHISTLOGCOUNT] = {
+    {.name = "period", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, period)},
+    {.name = "name", .type = SET_DATATYPE_STR, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, name)},
+    {.name = "maxHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxHeight), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "maxSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxSize), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "efficiency", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, efficiency), .size = sizeof(MAIN_LogFloatSettings), .sub = MAIN_SettingsTableLogFloat, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "growthRateHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, growthRateHeight), .size = sizeof(MAIN_LogFloatSettings), .sub = MAIN_SettingsTableLogFloat, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "growthRateSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, growthRateSize), .size = sizeof(MAIN_LogFloatSettings), .sub = MAIN_SettingsTableLogFloat, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "minGrowthEnergyHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, minGrowthEnergyHeight), .size = sizeof(MAIN_LogUint16Settings), .sub = MAIN_SettingsTableLogUint16, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "minGrowthEnergySize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, minGrowthEnergySize), .size = sizeof(MAIN_LogUint16Settings), .sub = MAIN_SettingsTableLogUint16, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "spawnRate", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, spawnRate), .size = sizeof(MAIN_LogFloatSettings), .sub = MAIN_SettingsTableLogFloat, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "minSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, minSpawnEnergy), .size = sizeof(MAIN_LogUint16Settings), .sub = MAIN_SettingsTableLogUint16, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "maxTileEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxTileEnergy), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "spawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, spawnEnergy), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "maxSpawnEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxSpawnEnergy), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "mutationRate", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, mutationRate), .size = sizeof(MAIN_LogFloatSettings), .sub = MAIN_SettingsTableLogFloat, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "mutationAttempts", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, mutationAttempts), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "size", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, size), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "height", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, height), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "energy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, energy), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "age", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, age), .size = sizeof(MAIN_LogUint64Settings), .sub = MAIN_SettingsTableLogUint64, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "energyUsage", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, energyUsage), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "maxEnergy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxEnergy), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT},
+    {.name = "biomass", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, biomass), .size = sizeof(MAIN_LogUint32Settings), .sub = MAIN_SettingsTableLogUint32, .count = MAIN_SETTINGSLOGTYPECOUNT}
+};
+
 SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
     {.name = "geneConstraints", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, geneConstraints), .size = sizeof(MAIN_GeneConstraints), .sub = MAIN_SettingsTableGeneConstrains, .count = MAIN_SETTINGSGENECONSTRAINTCOUNT},
     {.name = "map", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, map), .size = sizeof(MAIN_MapSettings), .sub = MAIN_SettingsTableMap, .count = MAIN_SETTINGSMAPCOUNT},
     {.name = "init", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, init), .size = sizeof(MAIN_InitialSettings), .sub = MAIN_SettingsTableInit, .count = MAIN_SETTINGSINITCOUNT},
     {.name = "energy", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, energy), .size = sizeof(MAIN_EnergySettings), .sub = MAIN_SettingsTableEnergy, .count = MAIN_SETTINGSENERGYCOUNT},
+    {.name = "histLog", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_Settings, histLog), .size = sizeof(MAIN_HistLogSettings), .sub = MAIN_SettingsTableHistLog, .count = MAIN_SETTINGSHISTLOGCOUNT},
     {.name = "killIlligal", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killIlligal)},
     {.name = "killLow", .type = SET_DATATYPE_BOOL, .depth = 0, .offset = offsetof(MAIN_Settings, killLow)},
     {.name = "spawnCount", .type = SET_DATATYPE_UINT8, .depth = 0, .offset = offsetof(MAIN_Settings, spawnCount)},
@@ -595,6 +783,16 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_InitMapSettings(MAIN_MapSettings *Struct);
 void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct);
 void MAIN_InitEnergySettings(MAIN_EnergySettings *Struct);
+void MAIN_InitLogUint8Settings(MAIN_LogUint8Settings *Struct);
+void MAIN_InitLogUint16Settings(MAIN_LogUint16Settings *Struct);
+void MAIN_InitLogUint32Settings(MAIN_LogUint32Settings *Struct);
+void MAIN_InitLogUint64Settings(MAIN_LogUint64Settings *Struct);
+void MAIN_InitLogInt8Settings(MAIN_LogInt8Settings *Struct);
+void MAIN_InitLogInt16Settings(MAIN_LogInt16Settings *Struct);
+void MAIN_InitLogInt32Settings(MAIN_LogInt32Settings *Struct);
+void MAIN_InitLogInt64Settings(MAIN_LogInt64Settings *Struct);
+void MAIN_InitLogFloatSettings(MAIN_LogFloatSettings *Struct);
+void MAIN_InitHistLogSettings(MAIN_HistLogSettings *Struct);
 void MAIN_InitSettings(MAIN_Settings *Struct);
 void MAIN_InitMap(MAIN_Map *Struct);
 void MAIN_InitTile(MAIN_Tile *Struct);
@@ -617,6 +815,16 @@ void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_CleanMapSettings(MAIN_MapSettings *Struct);
 void MAIN_CleanInitialSettings(MAIN_InitialSettings *Struct);
 void MAIN_CleanEnergySettings(MAIN_EnergySettings *Struct);
+void MAIN_CleanLogUint8Settings(MAIN_LogUint8Settings *Struct);
+void MAIN_CleanLogUint16Settings(MAIN_LogUint16Settings *Struct);
+void MAIN_CleanLogUint32Settings(MAIN_LogUint32Settings *Struct);
+void MAIN_CleanLogUint64Settings(MAIN_LogUint64Settings *Struct);
+void MAIN_CleanLogInt8Settings(MAIN_LogInt8Settings *Struct);
+void MAIN_CleanLogInt16Settings(MAIN_LogInt16Settings *Struct);
+void MAIN_CleanLogInt32Settings(MAIN_LogInt32Settings *Struct);
+void MAIN_CleanLogInt64Settings(MAIN_LogInt64Settings *Struct);
+void MAIN_CleanLogFloatSettings(MAIN_LogFloatSettings *Struct);
+void MAIN_CleanHistLogSettings(MAIN_HistLogSettings *Struct);
 void MAIN_CleanSettings(MAIN_Settings *Struct);
 void MAIN_CleanMap(MAIN_Map *Struct);
 void MAIN_CleanTile(MAIN_Tile *Struct);
@@ -639,6 +847,16 @@ void MAIN_DestroyGeneConstraints(MAIN_GeneConstraints *Struct);
 void MAIN_DestroyMapSettings(MAIN_MapSettings *Struct);
 void MAIN_DestroyInitialSettings(MAIN_InitialSettings *Struct);
 void MAIN_DestroyEnergySettings(MAIN_EnergySettings *Struct);
+void MAIN_DestroyLogUint8Settings(MAIN_LogUint8Settings *Struct);
+void MAIN_DestroyLogUint16Settings(MAIN_LogUint16Settings *Struct);
+void MAIN_DestroyLogUint32Settings(MAIN_LogUint32Settings *Struct);
+void MAIN_DestroyLogUint64Settings(MAIN_LogUint64Settings *Struct);
+void MAIN_DestroyLogInt8Settings(MAIN_LogInt8Settings *Struct);
+void MAIN_DestroyLogInt16Settings(MAIN_LogInt16Settings *Struct);
+void MAIN_DestroyLogInt32Settings(MAIN_LogInt32Settings *Struct);
+void MAIN_DestroyLogInt64Settings(MAIN_LogInt64Settings *Struct);
+void MAIN_DestroyLogFloatSettings(MAIN_LogFloatSettings *Struct);
+void MAIN_DestroyHistLogSettings(MAIN_HistLogSettings *Struct);
 void MAIN_DestroySettings(MAIN_Settings *Struct);
 void MAIN_DestroyMap(MAIN_Map *Struct);
 void MAIN_DestroyTile(MAIN_Tile *Struct);
@@ -735,7 +953,7 @@ MAIN_Map *MAIN_CreateMap(const MAIN_Settings *Settings)
         MAIN_InitTile(TileList);
 
     // Set energy of tiles
-    if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_CONST) == 0)
+    if (Settings->map.energyMethod == NULL || strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_CONST) == 0)
         MAIN_TileEnergyConst(Settings, Map->tiles, &Map->size);
             
     else if (strcmp(Settings->map.energyMethod, MAIN_ENERGYMETHOD_COS) == 0)
@@ -856,8 +1074,6 @@ void MAIN_GenerateGene(MAIN_Map *Map, MAIN_Gene *Gene)
     Gene->maxTileEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.maxTileEnergy, &Map->random);
     Gene->spawnEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.spawnEnergy, &Map->random);
     Gene->maxSpawnEnergy = MAIN_GenerateUint32(&Map->settings->geneConstraints.maxSpawnEnergy, &Map->random);
-    Gene->spawnSize = MAIN_GenerateUint8(&Map->settings->geneConstraints.spawnSize, &Map->random);
-    Gene->spawnSpread = MAIN_GenerateUint8(&Map->settings->geneConstraints.spawnSpread, &Map->random);
     Gene->mutationRate = MAIN_GenerateFloat(&Map->settings->geneConstraints.mutationRate, &Map->random);
     Gene->mutationAttempts = MAIN_GenerateUint8(&Map->settings->geneConstraints.mutationAttempts, &Map->random);
 }
@@ -1031,8 +1247,6 @@ bool MAIN_TruncateGene(const MAIN_Settings *Settings, MAIN_Gene *Gene)
     Return |= MAIN_TruncateUint32(&Settings->geneConstraints.maxTileEnergy, &Gene->maxTileEnergy);
     Return |= MAIN_TruncateUint32(&Settings->geneConstraints.spawnEnergy, &Gene->spawnEnergy);
     Return |= MAIN_TruncateUint32(&Settings->geneConstraints.maxSpawnEnergy, &Gene->maxSpawnEnergy);
-    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.spawnSize, &Gene->spawnSize);
-    Return |= MAIN_TruncateUint8(&Settings->geneConstraints.spawnSpread, &Gene->spawnSpread);
     Return |= MAIN_TruncateFloat(&Settings->geneConstraints.mutationRate, &Gene->mutationRate);
     Return |= MAIN_TruncateUint8(&Settings->geneConstraints.mutationAttempts, &Gene->mutationAttempts);
 
@@ -1456,32 +1670,6 @@ bool MAIN_Spawn(MAIN_Tile *Tile, MAIN_Plant *Parent)
         }
     }
     
-/*
-    // Figure out how many children to make
-    int8_t ChildCount = Parent->gene.spawnSize - Parent->gene.spawnSpread + (RNG_RandS(Parent->map->random) % (2 * Parent->gene.spawnSpread + 1));
-
-    for (int8_t ChildNum = 0; ChildNum < ChildCount && Parent->stats.energy > 0; ++ChildNum)
-    {
-        // Get the energy
-        uint32_t Energy = Parent->gene.spawnEnergy;
-
-        if (Energy > Parent->stats.energy)
-            Energy = Parent->stats.energy;
-
-        // Get the tile
-        int32_t Range = Parent->map->settings->spawnRange / Energy;
-        MAIN_Tile *NewTile = MAIN_GetRelativeTile(Parent->map, Tile, (RNG_RandS(Parent->map->random) % (2 * Range + 1)) - Range, (RNG_RandS(Parent->map->random) % (2 * Range + 1)) - Range);
-
-        if (!MAIN_CreatePlant(Parent->map, NewTile, (uint32_t)((double)Energy * Parent->map->settings->energy.spawnEfficiency), &Parent->gene))
-        {
-            _MAIN_AddError(MAIN_ERRORID_SPAWN_CREATEPLANT, MAIN_ERRORMES_CREATEPLANT);
-            return false;
-        }
-
-        // Remove energy
-        Parent->stats.energy -= Energy;
-    }*/
-    
     return true;
 }
 
@@ -1709,7 +1897,7 @@ uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1760,7 +1948,7 @@ uint64_t *MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1811,7 +1999,7 @@ uint64_t *MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1862,7 +2050,7 @@ uint64_t *MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1913,7 +2101,7 @@ uint64_t *MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int8_t
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1964,7 +2152,7 @@ uint64_t *MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int16
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2015,7 +2203,7 @@ uint64_t *MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int32
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2066,7 +2254,7 @@ uint64_t *MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int64
 
     // Get the distance between bins
     double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+    double BinDist = ((double)Max - (double)Min) / (double)Bins;
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2276,16 +2464,6 @@ void MAIN_InitGeneConstraints(MAIN_GeneConstraints *Struct)
     Struct->maxSpawnEnergy.mean = 100;
     Struct->maxSpawnEnergy.spread = 100;
 
-    Struct->spawnSize.min = 1;
-    Struct->spawnSize.max = 0xFF;
-    Struct->spawnSize.mean = 5;
-    Struct->spawnSize.spread = 5;
-
-    Struct->spawnSpread.min = 0;
-    Struct->spawnSpread.max = 0xFF;
-    Struct->spawnSpread.mean = 5;
-    Struct->spawnSpread.spread = 5;
-
     Struct->mutationRate.min = 0.;
     Struct->mutationRate.max = 1.;
     Struct->mutationRate.mean = 0.5;
@@ -2304,10 +2482,7 @@ void MAIN_InitMapSettings(MAIN_MapSettings *Struct)
     Struct->minEnergy = 1000;
     Struct->maxEnergy = 10000;
     Struct->energyNoise = 0.2;
-    Struct->energyMethod = (char *)malloc(sizeof(char) * (strlen(MAIN_ENERGYMETHOD_CONST) + 1));
-
-    if (Struct->energyMethod != NULL)
-        strcpy(Struct->energyMethod, MAIN_ENERGYMETHOD_CONST);
+    Struct->energyMethod = NULL;
 }   
 
 void MAIN_InitInitialSettings(MAIN_InitialSettings *Struct)
@@ -2331,12 +2506,112 @@ void MAIN_InitEnergySettings(MAIN_EnergySettings *Struct)
     Struct->spawnEfficiency = 0.5;
 }
 
+void MAIN_InitLogUint8Settings(MAIN_LogUint8Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = 0;
+    Struct->max = 0xFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogUint16Settings(MAIN_LogUint16Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = 0;
+    Struct->max = 0xFFFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogUint32Settings(MAIN_LogUint32Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = 0;
+    Struct->max = 0xFFFFFFFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogUint64Settings(MAIN_LogUint64Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = 0;
+    Struct->max = 0xFFFFFFFFFFFFFFFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogInt8Settings(MAIN_LogInt8Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = -0x80;
+    Struct->max = 0x7F;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogInt16Settings(MAIN_LogInt16Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = -0x8000;
+    Struct->max = 0x7FFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogInt32Settings(MAIN_LogInt32Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = -0x80000000;
+    Struct->max = 0x7FFFFFFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogInt64Settings(MAIN_LogInt64Settings *Struct)
+{
+    Struct->active = false;
+    Struct->min = -0x8000000000000000;
+    Struct->max = 0x7FFFFFFFFFFFFFFF;
+    Struct->bins = 100;
+}
+
+void MAIN_InitLogFloatSettings(MAIN_LogFloatSettings *Struct)
+{
+    Struct->active = false;
+    Struct->min = 0.;
+    Struct->max = 1.;
+    Struct->bins = 100;
+}
+
+void MAIN_InitHistLogSettings(MAIN_HistLogSettings *Struct)
+{
+    Struct->period = 0;
+    Struct->name = NULL;
+    MAIN_InitLogUint8Settings(&Struct->maxHeight);    
+    MAIN_InitLogUint8Settings(&Struct->maxSize);
+    MAIN_InitLogFloatSettings(&Struct->efficiency);
+    MAIN_InitLogFloatSettings(&Struct->growthRateHeight);
+    MAIN_InitLogFloatSettings(&Struct->growthRateSize);
+    MAIN_InitLogUint16Settings(&Struct->minGrowthEnergyHeight);
+    MAIN_InitLogUint16Settings(&Struct->minGrowthEnergySize);
+    MAIN_InitLogFloatSettings(&Struct->spawnRate);
+    MAIN_InitLogUint16Settings(&Struct->minSpawnEnergy);
+    MAIN_InitLogUint32Settings(&Struct->maxTileEnergy);
+    MAIN_InitLogUint32Settings(&Struct->spawnEnergy);
+    MAIN_InitLogUint32Settings(&Struct->maxSpawnEnergy);
+    MAIN_InitLogFloatSettings(&Struct->mutationRate);
+    MAIN_InitLogUint8Settings(&Struct->mutationAttempts);
+    MAIN_InitLogUint8Settings(&Struct->size);
+    MAIN_InitLogUint8Settings(&Struct->height);
+    MAIN_InitLogUint32Settings(&Struct->energy);
+    MAIN_InitLogUint64Settings(&Struct->age);
+    MAIN_InitLogUint32Settings(&Struct->energyUsage);
+    MAIN_InitLogUint32Settings(&Struct->maxEnergy);
+    MAIN_InitLogUint32Settings(&Struct->biomass);    
+}
+
 void MAIN_InitSettings(MAIN_Settings *Struct)
 {
     MAIN_InitGeneConstraints(&Struct->geneConstraints);
     MAIN_InitMapSettings(&Struct->map);
     MAIN_InitInitialSettings(&Struct->init);
     MAIN_InitEnergySettings(&Struct->energy);
+    MAIN_InitHistLogSettings(&Struct->histLog);
     Struct->killIlligal = true;
     Struct->killLow = true;
     Struct->spawnRange = 250;
@@ -2467,8 +2742,7 @@ void MAIN_CleanGeneConstraints(MAIN_GeneConstraints *Struct)
     MAIN_CleanUint16Constraint(&Struct->minSpawnEnergy);
     MAIN_CleanUint32Constraint(&Struct->maxTileEnergy);
     MAIN_CleanUint32Constraint(&Struct->spawnEnergy);
-    MAIN_CleanUint8Constraint(&Struct->spawnSize);
-    MAIN_CleanUint8Constraint(&Struct->spawnSpread);
+    MAIN_CleanUint32Constraint(&Struct->maxSpawnEnergy);
     MAIN_CleanFloatConstraint(&Struct->mutationRate);
     MAIN_CleanUint8Constraint(&Struct->mutationAttempts);
 }
@@ -2489,6 +2763,76 @@ void MAIN_CleanEnergySettings(MAIN_EnergySettings *Struct)
 
 }
 
+void MAIN_CleanLogUint8Settings(MAIN_LogUint8Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogUint16Settings(MAIN_LogUint16Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogUint32Settings(MAIN_LogUint32Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogUint64Settings(MAIN_LogUint64Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogInt8Settings(MAIN_LogInt8Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogInt16Settings(MAIN_LogInt16Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogInt32Settings(MAIN_LogInt32Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogInt64Settings(MAIN_LogInt64Settings *Struct)
+{
+
+}
+
+void MAIN_CleanLogFloatSettings(MAIN_LogFloatSettings *Struct)
+{
+
+}
+
+void MAIN_CleanHistLogSettings(MAIN_HistLogSettings *Struct)
+{
+    MAIN_InitLogUint8Settings(&Struct->maxHeight);
+    MAIN_InitLogUint8Settings(&Struct->maxSize);
+    MAIN_InitLogFloatSettings(&Struct->efficiency);
+    MAIN_InitLogFloatSettings(&Struct->growthRateHeight);
+    MAIN_InitLogFloatSettings(&Struct->growthRateSize);
+    MAIN_InitLogUint16Settings(&Struct->minGrowthEnergyHeight);
+    MAIN_InitLogUint16Settings(&Struct->minGrowthEnergySize);
+    MAIN_InitLogFloatSettings(&Struct->spawnRate);
+    MAIN_InitLogUint16Settings(&Struct->minSpawnEnergy);
+    MAIN_InitLogUint32Settings(&Struct->maxTileEnergy);
+    MAIN_InitLogUint32Settings(&Struct->spawnEnergy);
+    MAIN_InitLogUint32Settings(&Struct->maxSpawnEnergy);
+    MAIN_InitLogFloatSettings(&Struct->mutationRate);
+    MAIN_InitLogUint8Settings(&Struct->mutationAttempts);
+    MAIN_InitLogUint8Settings(&Struct->size);
+    MAIN_InitLogUint8Settings(&Struct->height);
+    MAIN_InitLogUint32Settings(&Struct->energy);
+    MAIN_InitLogUint64Settings(&Struct->age);
+    MAIN_InitLogUint32Settings(&Struct->energyUsage);
+    MAIN_InitLogUint32Settings(&Struct->maxEnergy);
+    MAIN_InitLogUint32Settings(&Struct->biomass);
+}
+
 void MAIN_CleanSettings(MAIN_Settings *Struct)
 {
     // Clean gene constraints
@@ -2502,6 +2846,9 @@ void MAIN_CleanSettings(MAIN_Settings *Struct)
 
     // Clean energy
     MAIN_CleanEnergySettings(&Struct->energy);
+
+    // Clean Hist log
+    MAIN_CleanHistLogSettings(&Struct->histLog);
 }
 
 void MAIN_CleanMap(MAIN_Map *Struct)
@@ -2656,6 +3003,66 @@ void MAIN_DestroyEnergySettings(MAIN_EnergySettings *Struct)
     free(Struct);
 }
 
+void MAIN_DestroyLogUint8Settings(MAIN_LogUint8Settings *Struct)
+{
+    MAIN_CleanLogUint8Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogUint16Settings(MAIN_LogUint16Settings *Struct)
+{
+    MAIN_CleanLogUint16Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogUint32Settings(MAIN_LogUint32Settings *Struct)
+{
+    MAIN_CleanLogUint32Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogUint64Settings(MAIN_LogUint64Settings *Struct)
+{
+    MAIN_CleanLogUint64Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogInt8Settings(MAIN_LogInt8Settings *Struct)
+{
+    MAIN_CleanLogInt8Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogInt16Settings(MAIN_LogInt16Settings *Struct)
+{
+    MAIN_CleanLogInt16Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogInt32Settings(MAIN_LogInt32Settings *Struct)
+{
+    MAIN_CleanLogInt32Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogInt64Settings(MAIN_LogInt64Settings *Struct)
+{
+    MAIN_CleanLogInt64Settings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyLogFloatSettings(MAIN_LogFloatSettings *Struct)
+{
+    MAIN_CleanLogFloatSettings(Struct);
+    free(Struct);
+}
+
+void MAIN_DestroyHistLogSettings(MAIN_HistLogSettings *Struct)
+{
+    MAIN_CleanHistLogSettings(Struct);
+    free(Struct);
+}
+
 void MAIN_DestroySettings(MAIN_Settings *Struct)
 {
     MAIN_CleanSettings(Struct);
@@ -2771,8 +3178,6 @@ int main(int argc, char **argv)
         uint32_t SizeCount2 = 0;
         double MutationRate = 0.;
         uint32_t MutationSize = 0;
-        uint32_t SpawnCount = 0;
-        uint32_t SpawnSpread = 0;
         uint32_t MinEnergySpawn = 0;
         uint32_t SpawnEnergy = 0;
         uint32_t MaxSpawnEnergy = 0;
@@ -2807,8 +3212,6 @@ int main(int argc, char **argv)
                 if ((*PlantList)->stats.energy > (*PlantList)->stats.maxEnergy) printf("Test: %u, %u\n", (*PlantList)->stats.energy, (*PlantList)->stats.maxEnergy);
                 MutationRate += (*PlantList)->gene.mutationRate;
                 MutationSize += (*PlantList)->gene.mutationAttempts;
-                SpawnCount += (*PlantList)->gene.spawnSize;
-                SpawnSpread += (*PlantList)->gene.spawnSpread;
                 MinEnergySpawn += (*PlantList)->gene.minSpawnEnergy;
                 SpawnEnergy += ((*PlantList)->gene.spawnEnergy > 10000) ? (10000) : ((*PlantList)->gene.spawnEnergy);
                 SpawnRate += (*PlantList)->gene.spawnRate;
@@ -2848,8 +3251,6 @@ int main(int argc, char **argv)
             FillLevel /= (double)Count;
             MutationRate /= (double)Count;
             MutationSize /= Count;
-            SpawnCount /= Count;
-            SpawnSpread /= Count;
             SpawnEnergy /= Count;
             MinEnergySpawn /= Count;
             SpawnRate /= (double)Count;

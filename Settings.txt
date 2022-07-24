@@ -2,8 +2,8 @@ killIlligal = true;
 killLow = true;
 spawnRange = 20000;
 spawnCount = 16;
-steps = 100;
-subSteps = 1000000;
+steps = 10;
+subSteps = 100000;
 
 map = {
     width = 128;
@@ -118,20 +118,6 @@ geneConstraints = {
         spread = 1000;
     };
 
-    spawnSize = {
-        min = 1;
-        max = 0x40;
-        mean = 5;
-        spread = 5;
-    };
-
-    spawnSpread = {
-        min = 0;
-        max = 0x3F;
-        mean = 5;
-        spread = 5;
-    };
-
     mutationRate = {
         min = 0.;
         max = 1.;
@@ -144,5 +130,10 @@ geneConstraints = {
         max = 0xFF;
         mean = 10;
         spread = 10;
+    };
+
+    histLog = {
+        period = 0;
+        name = "TestHistLog";
     };
 };
