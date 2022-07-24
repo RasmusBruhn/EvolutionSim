@@ -42,7 +42,25 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_GROWSIZE = 0x00090203,
     MAIN_ERRORID_GROWHEIGHT_INTILE = 0x000A0200,
     MAIN_ERRORID_GROWSIZE_ADDTOTILE = 0x000B0200,
-    MAIN_ERRORID_SPAWN_CREATEPLANT = 0x000C0200
+    MAIN_ERRORID_SPAWN_CREATEPLANT = 0x000C0200,
+    MAIN_ERRORID_LOGUINT8_MAXMIN = 0x000D0200,
+    MAIN_ERRORID_LOGUINT8_MALLOC = 0x000D0201,
+    MAIN_ERRORID_LOGUINT16_MAXMIN = 0x000E0200,
+    MAIN_ERRORID_LOGUINT16_MALLOC = 0x000E0201,
+    MAIN_ERRORID_LOGUINT32_MAXMIN = 0x000F0200,
+    MAIN_ERRORID_LOGUINT32_MALLOC = 0x000F0201,
+    MAIN_ERRORID_LOGUINT64_MAXMIN = 0x00100200,
+    MAIN_ERRORID_LOGUINT64_MALLOC = 0x00100201,
+    MAIN_ERRORID_LOGINT8_MAXMIN = 0x00110200,
+    MAIN_ERRORID_LOGINT8_MALLOC = 0x00110201,
+    MAIN_ERRORID_LOGINT16_MAXMIN = 0x00120200,
+    MAIN_ERRORID_LOGINT16_MALLOC = 0x00120201,
+    MAIN_ERRORID_LOGINT32_MAXMIN = 0x00130200,
+    MAIN_ERRORID_LOGINT32_MALLOC = 0x00130201,
+    MAIN_ERRORID_LOGINT64_MAXMIN = 0x00140200,
+    MAIN_ERRORID_LOGINT64_MALLOC = 0x00140201,
+    MAIN_ERRORID_LOGFLOAT_MAXMIN = 0x00150200,
+    MAIN_ERRORID_LOGFLOAT_MALLOC = 0x00150201
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
@@ -64,6 +82,7 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_GROWHEIGHT "An error occured while growing in height"
 #define MAIN_ERRORMES_GROWSIZE "An error occured while growing in size"
 #define MAIN_ERRORMES_CREATEPLANT "Unable to create plant"
+#define MAIN_ERRORMES_LOGMAXMIN "Maximum log value cannot be smaller then min log value (Max: %.2g, Min: %.2g)"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -86,6 +105,7 @@ typedef struct __MAIN_Tile MAIN_Tile;
 typedef struct __MAIN_Plant MAIN_Plant;
 typedef struct __MAIN_Gene MAIN_Gene;
 typedef struct __MAIN_PlantStats MAIN_PlantStats;
+typedef struct __MAIN_Filter MAIN_Filter;
 typedef enum __MAIN_Direction MAIN_Direction;
 
 enum __MAIN_Direction {
@@ -273,6 +293,10 @@ struct __MAIN_Plant {
     MAIN_Tile **tileList; // A list of all the tiles this plant is within
     MAIN_PlantStats stats; // The stats of the plant
     MAIN_Map *map; // The map this plant belongs to
+};
+
+struct __MAIN_Filter {
+
 };
 
 // Settings translation tables
@@ -525,6 +549,36 @@ bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant);
 
 // Gives the tile in the specified direction
 MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32_t y);
+
+// Checks if a plant is consistent with a filter
+bool MAIN_CheckFilter(MAIN_Filter *Filter, MAIN_Plant *Plant);
+
+// Logs a uint8 into a histogram
+uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8_t Min, uint8_t Max, size_t Bins);
+
+// Logs a uint16 into a histogram
+uint64_t *MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint16_t Min, uint16_t Max, size_t Bins);
+
+// Logs a uint32 into a histogram
+uint64_t *MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint32_t Min, uint32_t Max, size_t Bins);
+
+// Logs a uint64 into a histogram
+uint64_t *MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint64_t Min, uint64_t Max, size_t Bins);
+
+// Logs a int8 into a histogram
+uint64_t *MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int8_t Min, int8_t Max, size_t Bins);
+
+// Logs a int16 into a histogram
+uint64_t *MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int16_t Min, int16_t Max, size_t Bins);
+
+// Logs a int32 into a histogram
+uint64_t *MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int32_t Min, int32_t Max, size_t Bins);
+
+// Logs a int64 into a histogram
+uint64_t *MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int64_t Min, int64_t Max, size_t Bins);
+
+// Logs a float into a histogram
+uint64_t *MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, double Min, double Max, size_t Bins);
 
 
 // Init functions
@@ -1622,6 +1676,469 @@ MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32
     int32_t NewY = (CurrentY + y) % Map->size.h;
 
     return Map->tiles + NewX + NewY * Map->size.w;
+}
+
+bool MAIN_CheckFilter(MAIN_Filter *Filter, MAIN_Plant *Plant)
+{
+    return true;
+}
+
+uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8_t Min, uint8_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(uint8_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint16_t Min, uint16_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(uint16_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint32_t Min, uint32_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(uint32_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint64_t Min, uint64_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(uint64_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int8_t Min, int8_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(int8_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int16_t Min, int16_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(int16_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int32_t Min, int32_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(int32_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int64_t Min, int64_t Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = Max - Min + 1;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double DoubleMin = (double)Min;
+    double BinDist = ((double)Max - (double)Min + 1.) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(int64_t *)((void *)(*PlantList) + Offset)) - DoubleMin) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
+}
+
+uint64_t *MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, double Min, double Max, size_t Bins)
+{
+    // Make sure max is larger than min
+    if (Max < Min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, Max, Min);
+        return NULL;
+    }
+
+    if (Bins == 0)
+        Bins = 100;
+
+    // Get enough memory
+    uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
+
+    if (Array == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return NULL;
+    }
+
+    // Initialize
+    memset(Array, 0, sizeof(uint64_t) * Bins);
+
+    // Get the distance between bins
+    double BinDist = (Max - Min) / (double)Bins;
+
+    // Go through all the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Check if it should use it
+        if (!MAIN_CheckFilter(Filter, *PlantList))
+            continue;
+
+        // Get the bin
+        int64_t Bin = (int64_t)(((double)(*(double *)((void *)(*PlantList) + Offset)) - Min) / BinDist);
+
+        if (Bin < 0)
+            Bin = 0;
+
+        else if (Bin >= Bins)
+            Bin = Bins - 1;
+
+        // Add to hist
+        ++Array[Bin];
+    }
+
+    return Array;
 }
 
 
