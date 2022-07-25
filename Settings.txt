@@ -135,5 +135,6 @@ geneConstraints = {
     histLog = {
         period = 0;
         name = "TestHistLog";
+        maxFileCount = 100;
     };
 };

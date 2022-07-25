@@ -45,22 +45,67 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_SPAWN_CREATEPLANT = 0x000C0200,
     MAIN_ERRORID_LOGUINT8_MAXMIN = 0x000D0200,
     MAIN_ERRORID_LOGUINT8_MALLOC = 0x000D0201,
+    MAIN_ERRORID_LOGUINT8_MALLOC2 = 0x000D0202,
+    MAIN_ERRORID_LOGUINT8_MALLOC3 = 0x000D0203,
+    MAIN_ERRORID_LOGUINT8_ITERATION = 0x000D0204,
+    MAIN_ERRORID_LOGUINT8_MALLOC4 = 0x000D0205,
+    MAIN_ERRORID_LOGUINT8_SAVE = 0x000D0206,
     MAIN_ERRORID_LOGUINT16_MAXMIN = 0x000E0200,
     MAIN_ERRORID_LOGUINT16_MALLOC = 0x000E0201,
+    MAIN_ERRORID_LOGUINT16_MALLOC2 = 0x000E0202,
+    MAIN_ERRORID_LOGUINT16_MALLOC3 = 0x000E0203,
+    MAIN_ERRORID_LOGUINT16_ITERATION = 0x000E0204,
+    MAIN_ERRORID_LOGUINT16_MALLOC4 = 0x000E0205,
+    MAIN_ERRORID_LOGUINT16_SAVE = 0x000E0206,
     MAIN_ERRORID_LOGUINT32_MAXMIN = 0x000F0200,
     MAIN_ERRORID_LOGUINT32_MALLOC = 0x000F0201,
+    MAIN_ERRORID_LOGUINT32_MALLOC2 = 0x000F0202,
+    MAIN_ERRORID_LOGUINT32_MALLOC3 = 0x000F0203,
+    MAIN_ERRORID_LOGUINT32_ITERATION = 0x000F0204,
+    MAIN_ERRORID_LOGUINT32_MALLOC4 = 0x000F0205,
+    MAIN_ERRORID_LOGUINT32_SAVE = 0x000F0206,
     MAIN_ERRORID_LOGUINT64_MAXMIN = 0x00100200,
     MAIN_ERRORID_LOGUINT64_MALLOC = 0x00100201,
+    MAIN_ERRORID_LOGUINT64_MALLOC2 = 0x00100202,
+    MAIN_ERRORID_LOGUINT64_MALLOC3 = 0x00100203,
+    MAIN_ERRORID_LOGUINT64_ITERATION = 0x00100204,
+    MAIN_ERRORID_LOGUINT64_MALLOC4 = 0x00100205,
+    MAIN_ERRORID_LOGUINT64_SAVE = 0x00100206,
     MAIN_ERRORID_LOGINT8_MAXMIN = 0x00110200,
     MAIN_ERRORID_LOGINT8_MALLOC = 0x00110201,
+    MAIN_ERRORID_LOGINT8_MALLOC2 = 0x00110202,
+    MAIN_ERRORID_LOGINT8_MALLOC3 = 0x00110203,
+    MAIN_ERRORID_LOGINT8_ITERATION = 0x00110204,
+    MAIN_ERRORID_LOGINT8_MALLOC4 = 0x00110205,
+    MAIN_ERRORID_LOGINT8_SAVE = 0x00110206,
     MAIN_ERRORID_LOGINT16_MAXMIN = 0x00120200,
     MAIN_ERRORID_LOGINT16_MALLOC = 0x00120201,
+    MAIN_ERRORID_LOGINT16_MALLOC2 = 0x00120202,
+    MAIN_ERRORID_LOGINT16_MALLOC3 = 0x00120203,
+    MAIN_ERRORID_LOGINT16_ITERATION = 0x00120204,
+    MAIN_ERRORID_LOGINT16_MALLOC4 = 0x00120205,
+    MAIN_ERRORID_LOGINT16_SAVE = 0x00120206,
     MAIN_ERRORID_LOGINT32_MAXMIN = 0x00130200,
     MAIN_ERRORID_LOGINT32_MALLOC = 0x00130201,
+    MAIN_ERRORID_LOGINT32_MALLOC2 = 0x00130202,
+    MAIN_ERRORID_LOGINT32_MALLOC3 = 0x00130203,
+    MAIN_ERRORID_LOGINT32_ITERATION = 0x00130204,
+    MAIN_ERRORID_LOGINT32_MALLOC4 = 0x00130205,
+    MAIN_ERRORID_LOGINT32_SAVE = 0x00130206,
     MAIN_ERRORID_LOGINT64_MAXMIN = 0x00140200,
     MAIN_ERRORID_LOGINT64_MALLOC = 0x00140201,
+    MAIN_ERRORID_LOGINT64_MALLOC2 = 0x00140202,
+    MAIN_ERRORID_LOGINT64_MALLOC3 = 0x00140203,
+    MAIN_ERRORID_LOGINT64_ITERATION = 0x00140204,
+    MAIN_ERRORID_LOGINT64_MALLOC4 = 0x00140205,
+    MAIN_ERRORID_LOGINT64_SAVE = 0x00140206,
     MAIN_ERRORID_LOGFLOAT_MAXMIN = 0x00150200,
-    MAIN_ERRORID_LOGFLOAT_MALLOC = 0x00150201
+    MAIN_ERRORID_LOGFLOAT_MALLOC = 0x00150201,
+    MAIN_ERRORID_LOGFLOAT_MALLOC2 = 0x00150202,
+    MAIN_ERRORID_LOGFLOAT_MALLOC3 = 0x00150203,
+    MAIN_ERRORID_LOGFLOAT_ITERATION = 0x00150204,
+    MAIN_ERRORID_LOGFLOAT_MALLOC4 = 0x00150205,
+    MAIN_ERRORID_LOGFLOAT_SAVE = 0x00150206
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
@@ -83,6 +128,8 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_GROWSIZE "An error occured while growing in size"
 #define MAIN_ERRORMES_CREATEPLANT "Unable to create plant"
 #define MAIN_ERRORMES_LOGMAXMIN "Maximum log value cannot be smaller then min log value (Max: %.2g, Min: %.2g)"
+#define MAIN_ERRORMES_LOGITERATION "Too many files has been written (Count: %u, max: %u)"
+#define MAIN_ERRORMES_SAVECSV "Unable to save csv (FileName: %s)"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -299,6 +346,7 @@ struct __MAIN_LogFloatSettings {
 struct __MAIN_HistLogSettings {
     uint64_t period; // How often it should log, if 0 then never log
     char *name; // The base name of the file, full name will be [name]_[fieldName]_[Count].csv
+    uint32_t maxFileCount; // The maximum number of iterations of the logs to write
     MAIN_LogUint8Settings maxHeight; // The maximum height of the plant
     MAIN_LogUint8Settings maxSize; // The maximum size of the plant
     MAIN_LogFloatSettings efficiency; // The effieciency at collecting energy
@@ -405,7 +453,7 @@ struct __MAIN_Filter {
 #define MAIN_SETTINGSINITCOUNT 3
 #define MAIN_SETTINGSENERGYCOUNT 10
 #define MAIN_SETTINGSLOGTYPECOUNT 4
-#define MAIN_SETTINGSHISTLOGCOUNT 23
+#define MAIN_SETTINGSHISTLOGCOUNT 24
 
 SET_TranslationTable MAIN_SettingsTableUint64Constraint[MAIN_SETTINGSCONSTRAINTCOUNT] = {
     {.name = "min", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_Uint64Constraint, min)},
@@ -581,6 +629,7 @@ SET_TranslationTable MAIN_SettingsTableLogFloat[MAIN_SETTINGSLOGTYPECOUNT] = {
 SET_TranslationTable MAIN_SettingsTableHistLog[MAIN_SETTINGSHISTLOGCOUNT] = {
     {.name = "period", .type = SET_DATATYPE_UINT64, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, period)},
     {.name = "name", .type = SET_DATATYPE_STR, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, name)},
+    {.name = "maxFileCount", .type = SET_DATATYPE_UINT32, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxFileCount)},
     {.name = "maxHeight", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxHeight), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
     {.name = "maxSize", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, maxSize), .size = sizeof(MAIN_LogUint8Settings), .sub = MAIN_SettingsTableLogUint8, .count = MAIN_SETTINGSLOGTYPECOUNT},
     {.name = "efficiency", .type = SET_DATATYPE_STRUCT, .depth = 0, .offset = offsetof(MAIN_HistLogSettings, efficiency), .size = sizeof(MAIN_LogFloatSettings), .sub = MAIN_SettingsTableLogFloat, .count = MAIN_SETTINGSLOGTYPECOUNT},
@@ -623,6 +672,14 @@ SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
 #define MAIN_ENERGYMETHOD_LINEAR "linear"
 #define MAIN_ENERGYMETHOD_COS "cos"
 #define MAIN_ENERGYMETHOD_COS2 "cos2"
+
+// Log data
+#define MAIN_HISTLOGHEADER "Histogram log for %s, iteration: %u, time: %lu"
+#define MAIN_HISTLOGHEADER_SIZE (strlen(MAIN_HISTLOGHEADER) + 100)
+#define MAIN_HISTLOGNAME "%s_%s_%u.csv"
+#define MAIN_HISTLOGNAME_SIZE 100
+#define MAIN_HISTLOGBASENAME "PlantEvolutionHistLog"
+#define MAIN_HISTLOGDELIM ","
 
 #define MAIN_PI 3.14159265359
 
@@ -742,31 +799,31 @@ MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32
 bool MAIN_CheckFilter(MAIN_Filter *Filter, MAIN_Plant *Plant);
 
 // Logs a uint8 into a histogram
-uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8_t Min, uint8_t Max, size_t Bins);
+bool MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint8Settings *LogSettings, const char *Name);
 
 // Logs a uint16 into a histogram
-uint64_t *MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint16_t Min, uint16_t Max, size_t Bins);
+bool MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint16Settings *LogSettings, const char *Name);
 
 // Logs a uint32 into a histogram
-uint64_t *MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint32_t Min, uint32_t Max, size_t Bins);
+bool MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint32Settings *LogSettings, const char *Name);
 
 // Logs a uint64 into a histogram
-uint64_t *MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint64_t Min, uint64_t Max, size_t Bins);
+bool MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint64Settings *LogSettings, const char *Name);
 
 // Logs a int8 into a histogram
-uint64_t *MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int8_t Min, int8_t Max, size_t Bins);
+bool MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt8Settings *LogSettings, const char *Name);
 
 // Logs a int16 into a histogram
-uint64_t *MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int16_t Min, int16_t Max, size_t Bins);
+bool MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt16Settings *LogSettings, const char *Name);
 
 // Logs a int32 into a histogram
-uint64_t *MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int32_t Min, int32_t Max, size_t Bins);
+bool MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt32Settings *LogSettings, const char *Name);
 
 // Logs a int64 into a histogram
-uint64_t *MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int64_t Min, int64_t Max, size_t Bins);
+bool MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt64Settings *LogSettings, const char *Name);
 
 // Logs a float into a histogram
-uint64_t *MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, double Min, double Max, size_t Bins);
+bool MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogFloatSettings *LogSettings, const char *Name);
 
 
 // Init functions
@@ -1871,17 +1928,37 @@ bool MAIN_CheckFilter(MAIN_Filter *Filter, MAIN_Plant *Plant)
     return true;
 }
 
-uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8_t Min, uint8_t Max, size_t Bins)
+bool MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint8Settings *LogSettings, const char *Name)
 {
-    // Make sure max is larger than min
-    if (Max < Min)
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
     }
 
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
@@ -1889,15 +1966,25 @@ uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8
     if (Array == NULL)
     {
         _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1919,36 +2006,117 @@ uint64_t *MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint8
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint16_t Min, uint16_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint16Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT16_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT16_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT16_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT16_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -1970,36 +2138,117 @@ uint64_t *MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint32_t Min, uint32_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT16_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT16_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT16_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint32Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT32_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT32_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT32_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT32_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2021,36 +2270,117 @@ uint64_t *MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint64_t Min, uint64_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT32_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT32_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT32_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint64Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT64_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGUINT64_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT64_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT64_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2072,36 +2402,117 @@ uint64_t *MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, uint
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int8_t Min, int8_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT64_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT64_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT64_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt8Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT8_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT8_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2123,36 +2534,117 @@ uint64_t *MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int8_t
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int16_t Min, int16_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT8_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT8_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT8_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt16Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT16_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT16_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT16_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT16_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2174,36 +2666,117 @@ uint64_t *MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int16
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int32_t Min, int32_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT16_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT16_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT16_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt32Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT32_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT32_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT32_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT32_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2225,36 +2798,117 @@ uint64_t *MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int32
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int64_t Min, int64_t Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)Max, (double)Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT32_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT32_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT32_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt64Settings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT64_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGINT64_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, (double)LogSettings->max, (double)LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = Max - Min + 1;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT64_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double DoubleMin = (double)Min;
-    double BinDist = ((double)Max - (double)Min) / (double)Bins;
+    double DoubleMin = (double)LogSettings->min;
+    double BinDist = ((double)LogSettings->max - (double)LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT64_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2276,35 +2930,116 @@ uint64_t *MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, int64
         ++Array[Bin];
     }
 
-    return Array;
-}
+    // Find the bin centres
+    double *TempList = BinCentres;
 
-uint64_t *MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, double Min, double Max, size_t Bins)
-{
-    // Make sure max is larger than min
-    if (Max < Min)
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = DoubleMin + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
     {
-        _MAIN_SetError(MAIN_ERRORID_LOGUINT8_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, Max, Min);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT64_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
     }
 
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT64_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGINT64_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
+}
+
+bool MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogFloatSettings *LogSettings, const char *Name)
+{
+    // Make sure the iteration is not too high
+    uint32_t Iteration = 0;
+
+    if (Map->settings->histLog.period != 0)
+        Iteration = Map->time / Map->settings->histLog.period;
+
+    if (Iteration >= Map->settings->histLog.maxFileCount)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGFLOAT_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
+        return false;
+    }
+
+    // Set base name
+    char *BaseName = Map->settings->histLog.name;
+
+    if (BaseName == NULL)
+        BaseName = MAIN_HISTLOGBASENAME;
+
+    // Make sure max is larger than min
+    if (LogSettings->max < LogSettings->min)
+    {
+        _MAIN_SetError(MAIN_ERRORID_LOGFLOAT_MAXMIN, MAIN_ERRORMES_LOGMAXMIN, LogSettings->max, LogSettings->min);
+        return false;
+    }
+
+    uint64_t Bins = LogSettings->bins;
+
     if (Bins == 0)
-        Bins = 100;
+        Bins = LogSettings->max - LogSettings->min + 1;
 
     // Get enough memory
     uint64_t *Array = (uint64_t *)malloc(sizeof(uint64_t) * Bins);
 
     if (Array == NULL)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGUINT8_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
-        return NULL;
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGFLOAT_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint64_t) * Bins);
+        return false;
     }
 
     // Initialize
     memset(Array, 0, sizeof(uint64_t) * Bins);
 
     // Get the distance between bins
-    double BinDist = (Max - Min) / (double)Bins;
+    double BinDist = (LogSettings->max - LogSettings->min) / (double)Bins;
+
+    // Allocate memory for the bin centres
+    double *BinCentres = (double *)malloc(sizeof(double) * Bins);
+
+    if (BinCentres == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGFLOAT_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(double) * Bins);
+        free(Array);
+        return false;
+    }
 
     // Go through all the plants
     for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
@@ -2314,7 +3049,7 @@ uint64_t *MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, doubl
             continue;
 
         // Get the bin
-        int64_t Bin = (int64_t)(((double)(*(double *)((void *)(*PlantList) + Offset)) - Min) / BinDist);
+        int64_t Bin = (int64_t)((*(double *)((void *)(*PlantList) + Offset) - LogSettings->min) / BinDist);
 
         if (Bin < 0)
             Bin = 0;
@@ -2326,7 +3061,58 @@ uint64_t *MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, doubl
         ++Array[Bin];
     }
 
-    return Array;
+    // Find the bin centres
+    double *TempList = BinCentres;
+
+    for (int64_t Bin = 0; Bin < Bins; ++Bin, ++TempList)
+        *TempList = LogSettings->min + ((double)Bin + 0.5) * BinDist;
+
+    // Get header for the file
+    size_t HeaderLength = MAIN_HISTLOGHEADER_SIZE + strlen(Name);
+    char *Header = (char *)malloc(sizeof(char) * HeaderLength);
+
+    if (Header == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGFLOAT_MALLOC3, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * HeaderLength);
+        free(Array);
+        free(BinCentres);
+        return false;
+    }
+
+    snprintf(Header, HeaderLength, MAIN_HISTLOGHEADER, Name, Iteration, Map->time);
+
+    // Create the file name
+    size_t FileNameLength = MAIN_HISTLOGNAME_SIZE + strlen(BaseName) + strlen(Name);
+    char *FileName = (char *)malloc(sizeof(char) * FileNameLength);
+
+    if (FileName == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGFLOAT_MALLOC4, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(char) * FileNameLength);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        return false;
+    }
+
+    snprintf(FileName, FileNameLength, MAIN_HISTLOGNAME, BaseName, Name, Iteration);
+
+    // Save the csv
+    if (!FIL_SaveCSV(FileName, Header, MAIN_HISTLOGDELIM, Bins, 2, BinCentres, FIL_DATATYPE_DOUBLE, Array, FIL_DATATYPE_UINT64))
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_LOGFLOAT_SAVE, FIL_GetError(), MAIN_ERRORMES_SAVECSV, FileName);
+        free(Array);
+        free(BinCentres);
+        free(Header);
+        free(FileName);
+        return false;
+    }
+
+    free(Array);
+    free(BinCentres);
+    free(Header);
+    free(FileName);
+
+    return true;
 }
 
 
@@ -2582,6 +3368,7 @@ void MAIN_InitHistLogSettings(MAIN_HistLogSettings *Struct)
 {
     Struct->period = 0;
     Struct->name = NULL;
+    Struct->maxFileCount = 100;
     MAIN_InitLogUint8Settings(&Struct->maxHeight);    
     MAIN_InitLogUint8Settings(&Struct->maxSize);
     MAIN_InitLogFloatSettings(&Struct->efficiency);
