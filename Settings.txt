@@ -3,14 +3,14 @@ killLow = true;
 spawnRange = 20000;
 spawnCount = 16;
 steps = 10;
-subSteps = 100000;
+subSteps = 1000000;
 
 map = {
     width = 128;
     height = 128;
     minEnergy = 100;
     maxEnergy = 10000;
-    energyMethod = "cos";
+    energyMethod = "const";
     energyNoise = 0.5;
 };
 
@@ -131,10 +131,31 @@ geneConstraints = {
         mean = 10;
         spread = 10;
     };
+};
 
-    histLog = {
-        period = 0;
-        name = "TestHistLog";
-        maxFileCount = 100;
+histLog = {
+    period = 0;
+    name = "HistLogs/TestHistLog";
+    maxFileCount = 100;
+
+    maxHeight = {
+        active = true;
+        min = 0;
+        max = 30;
+        bins = 0;
+    };
+
+    maxSize = {
+        active = true;
+        min = 0;
+        max = 30;
+        bins = 0;
+    };
+
+    efficiency = {
+        active = true;
+        min = 0.;
+        max = 1.;
+        bins = 20;
     };
 };

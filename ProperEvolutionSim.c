@@ -40,6 +40,7 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_STEP_SPAWN = 0x00090201,
     MAIN_ERRORID_STEP_GROWHEIGHT = 0x00090202,
     MAIN_ERRORID_STEP_GROWSIZE = 0x00090203,
+    MAIN_ERRORID_STEP_HISTLOG = 0x00090204,
     MAIN_ERRORID_GROWHEIGHT_INTILE = 0x000A0200,
     MAIN_ERRORID_GROWSIZE_ADDTOTILE = 0x000B0200,
     MAIN_ERRORID_SPAWN_CREATEPLANT = 0x000C0200,
@@ -105,7 +106,32 @@ enum MAIN_ErrorID {
     MAIN_ERRORID_LOGFLOAT_MALLOC3 = 0x00150203,
     MAIN_ERRORID_LOGFLOAT_ITERATION = 0x00150204,
     MAIN_ERRORID_LOGFLOAT_MALLOC4 = 0x00150205,
-    MAIN_ERRORID_LOGFLOAT_SAVE = 0x00150206
+    MAIN_ERRORID_LOGFLOAT_SAVE = 0x00150206,
+    MAIN_ERRORID_HISTLOG_MAXHEIGTH = 0x00160200,
+    MAIN_ERRORID_HISTLOG_MAXSIZE = 0x00160201,
+    MAIN_ERRORID_HISTLOG_EFFICIENCY = 0x00160202,
+    MAIN_ERRORID_HISTLOG_GROWTHRATEHEIGHT = 0x00160203,
+    MAIN_ERRORID_HISTLOG_GROWTHRATESIZE = 0x00160204,
+    MAIN_ERRORID_HISTLOG_MINGROWTHENERGYHEIGHT = 0x00160205,
+    MAIN_ERRORID_HISTLOG_MINGROWTHENERGYSIZE = 0x00160206,
+    MAIN_ERRORID_HISTLOG_SPAWNRATE = 0x00160207,
+    MAIN_ERRORID_HISTLOG_MINSPAWNENERGY = 0x00160208,
+    MAIN_ERRORID_HISTLOG_MAXTILEENERGY = 0x00160209,
+    MAIN_ERRORID_HISTLOG_SPAWNENERGY = 0x0016020A,
+    MAIN_ERRORID_HISTLOG_MAXSPAWNENERGY = 0x0016020B,
+    MAIN_ERRORID_HISTLOG_MUTATIONRATE = 0x0016020C,
+    MAIN_ERRORID_HISTLOG_MUTATIONATTEMPTS = 0x0016020D,
+    MAIN_ERRORID_HISTLOG_SIZE = 0x0016020E,
+    MAIN_ERRORID_HISTLOG_HEIGHT = 0x0016020F,
+    MAIN_ERRORID_HISTLOG_ENERGY = 0x00160210,
+    MAIN_ERRORID_HISTLOG_AGE = 0x00160211,
+    MAIN_ERRORID_HISTLOG_ENERGYUSAGE = 0x00160212,
+    MAIN_ERRORID_HISTLOG_MAXENERGY = 0x00160213,
+    MAIN_ERRORID_HISTLOG_BIOMASS = 0x00160214,
+    MAIN_ERRORID_FINDUNIQUESPECIES_MALLOC = 0x00170200,
+    MAIN_ERRORID_FINDUNIQUESPECIES_MALLOC2 = 0x00170201,
+    MAIN_ERRORID_FINDUNIQUESPECIES_REALLOC = 0x00170202,
+    MAIN_ERRORID_FINDUNIQUESPECIES_REALLOC2 = 0x00170203
 };
 
 #define MAIN_ERRORMES_MALLOC "Unable to allocate memory (Size: %u)"
@@ -130,6 +156,8 @@ enum MAIN_ErrorID {
 #define MAIN_ERRORMES_LOGMAXMIN "Maximum log value cannot be smaller then min log value (Max: %.2g, Min: %.2g)"
 #define MAIN_ERRORMES_LOGITERATION "Too many files has been written (Count: %u, max: %u)"
 #define MAIN_ERRORMES_SAVECSV "Unable to save csv (FileName: %s)"
+#define MAIN_ERRORMES_HISTLOG "Unable to write hist log (Field: %s)"
+#define MAIN_ERRORMES_HISTLOGSTEP "Unable to create hist log (Time: %lu)"
 
 // Settings
 typedef struct __MAIN_Settings MAIN_Settings;
@@ -674,7 +702,7 @@ SET_TranslationTable MAIN_SettingsTableMain[MAIN_SETTINGSCOUNT] = {
 #define MAIN_ENERGYMETHOD_COS2 "cos2"
 
 // Log data
-#define MAIN_HISTLOGHEADER "Histogram log for %s, iteration: %u, time: %lu"
+#define MAIN_HISTLOGHEADER "Histogram log for %s, iteration: %u, time: %lu\nBin Centres, Counts"
 #define MAIN_HISTLOGHEADER_SIZE (strlen(MAIN_HISTLOGHEADER) + 100)
 #define MAIN_HISTLOGNAME "%s_%s_%u.csv"
 #define MAIN_HISTLOGNAME_SIZE 100
@@ -796,35 +824,43 @@ bool MAIN_GrowSize(MAIN_Tile *Tile, MAIN_Plant *Plant);
 MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32_t y);
 
 // Checks if a plant is consistent with a filter
-bool MAIN_CheckFilter(MAIN_Filter *Filter, MAIN_Plant *Plant);
+bool MAIN_CheckFilter(const MAIN_Filter *Filter, const MAIN_Plant *Plant);
 
 // Logs a uint8 into a histogram
-bool MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint8Settings *LogSettings, const char *Name);
+bool MAIN_LogUint8(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint8Settings *LogSettings, const char *Name);
 
 // Logs a uint16 into a histogram
-bool MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint16Settings *LogSettings, const char *Name);
+bool MAIN_LogUint16(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint16Settings *LogSettings, const char *Name);
 
 // Logs a uint32 into a histogram
-bool MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint32Settings *LogSettings, const char *Name);
+bool MAIN_LogUint32(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint32Settings *LogSettings, const char *Name);
 
 // Logs a uint64 into a histogram
-bool MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint64Settings *LogSettings, const char *Name);
+bool MAIN_LogUint64(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint64Settings *LogSettings, const char *Name);
 
 // Logs a int8 into a histogram
-bool MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt8Settings *LogSettings, const char *Name);
+bool MAIN_LogInt8(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt8Settings *LogSettings, const char *Name);
 
 // Logs a int16 into a histogram
-bool MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt16Settings *LogSettings, const char *Name);
+bool MAIN_LogInt16(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt16Settings *LogSettings, const char *Name);
 
 // Logs a int32 into a histogram
-bool MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt32Settings *LogSettings, const char *Name);
+bool MAIN_LogInt32(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt32Settings *LogSettings, const char *Name);
 
 // Logs a int64 into a histogram
-bool MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt64Settings *LogSettings, const char *Name);
+bool MAIN_LogInt64(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt64Settings *LogSettings, const char *Name);
 
 // Logs a float into a histogram
-bool MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogFloatSettings *LogSettings, const char *Name);
+bool MAIN_LogFloat(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogFloatSettings *LogSettings, const char *Name);
 
+// Do all the hist logs
+bool MAIN_HistLog(MAIN_Map *Map, const MAIN_Filter *Filter);
+
+// Find the number of bits different in the 2 genes
+uint32_t MAIN_GeneDiff(const MAIN_Gene *Gene1, const MAIN_Gene *Gene2);
+
+// Find the number of unique species
+MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t **Count, uint32_t *SpeciesCount);
 
 // Init functions
 void MAIN_InitUint64Constraint(MAIN_Uint64Constraint *Struct);
@@ -1609,86 +1645,97 @@ bool MAIN_Step(MAIN_Map *Map)
     // Get random tile
     MAIN_Tile *Tile = Map->tiles + (RNG_RandS(Map->random) % (Map->size.w * Map->size.h));
 
-    if (Tile->plantCount == 0)
-        return true;
-
-    // Get energy
-    uint32_t Energy = (uint32_t)((double)Tile->energy * (1 - RNG_RandSf(Map->random) * Map->settings->map.energyNoise));
-
-    // Copy plant list
-    MAIN_Plant **TempPlantList = (MAIN_Plant **)malloc(sizeof(MAIN_Plant *) * Tile->plantCount);
-
-    if (TempPlantList == NULL)
+    if (Tile->plantCount != 0)
     {
-        _MAIN_AddErrorForeign(MAIN_ERRORID_STEP_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Plant *) * Tile->plantCount);
-        return false;
+        // Get energy
+        uint32_t Energy = (uint32_t)((double)Tile->energy * (1 - RNG_RandSf(Map->random) * Map->settings->map.energyNoise));
+
+        // Copy plant list
+        MAIN_Plant **TempPlantList = (MAIN_Plant **)malloc(sizeof(MAIN_Plant *) * Tile->plantCount);
+
+        if (TempPlantList == NULL)
+        {
+            _MAIN_AddErrorForeign(MAIN_ERRORID_STEP_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Plant *) * Tile->plantCount);
+            return false;
+        }
+
+        memcpy(TempPlantList, Tile->plantList, sizeof(MAIN_Plant *) * Tile->plantCount);
+
+        // Run through plant list
+        for (MAIN_Plant **PlantList = TempPlantList, **EndPlantList = TempPlantList + Tile->plantCount; PlantList < EndPlantList; ++PlantList)
+        {
+            // Give energy
+            if ((*PlantList)->stats.height > 0)
+            {
+                uint64_t GetEnergy = (uint32_t)((double)Energy * (*PlantList)->gene.efficiency);
+                Energy -= GetEnergy;
+                (*PlantList)->stats.energy += GetEnergy;
+                if ((*PlantList)->stats.energy > (*PlantList)->stats.maxEnergy)
+                    (*PlantList)->stats.energy = (*PlantList)->stats.maxEnergy;
+            }
+
+            // Take energy
+            if ((*PlantList)->stats.energyUsage > (*PlantList)->stats.energy)
+            {
+                MAIN_DestroyPlant(*PlantList);
+                continue;
+            }
+
+            (*PlantList)->stats.energy -= (*PlantList)->stats.energyUsage;
+
+            // Grow in height
+            if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergyHeight && (*PlantList)->stats.height < (*PlantList)->gene.maxHeight && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateHeight)
+                if (!MAIN_GrowHeight(*PlantList))
+                {
+                    _MAIN_AddError(MAIN_ERRORID_STEP_GROWHEIGHT, MAIN_ERRORMES_GROWHEIGHT);
+                    free(TempPlantList);
+                    return false;
+                }
+
+            // Kill if it did not grow
+            if ((*PlantList)->stats.height == 0)
+            {
+                MAIN_DestroyPlant(*PlantList);
+                continue;
+            }
+
+            // Grow in size
+            if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && (*PlantList)->stats.size < (*PlantList)->gene.maxSize && (*PlantList)->stats.height > 0 && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
+                if (!MAIN_GrowSize(Tile, *PlantList))
+                {
+                    _MAIN_AddError(MAIN_ERRORID_STEP_GROWSIZE, MAIN_ERRORMES_GROWSIZE);
+                    free(TempPlantList);
+                    return false;
+                }
+        
+            // Spawn
+            if ((*PlantList)->stats.energy >= (*PlantList)->gene.minSpawnEnergy && (*PlantList)->stats.height > 0 && RNG_RandSf(Map->random) < (*PlantList)->gene.spawnRate)
+                if (!MAIN_Spawn(Tile, *PlantList))
+                {
+                    _MAIN_AddError(MAIN_ERRORID_STEP_SPAWN, MAIN_ERRORMES_SPAWN);
+                    free(TempPlantList);
+                    return false;
+                }
+
+            // Kill if it has no energy
+            if (Map->settings->killLow && (*PlantList)->stats.energy == 0)
+            {
+                MAIN_DestroyPlant(*PlantList);
+                continue;
+            }
+        }
+
+        // Free copy of plant list
+        free(TempPlantList);
     }
 
-    memcpy(TempPlantList, Tile->plantList, sizeof(MAIN_Plant *) * Tile->plantCount);
-
-    // Run through plant list
-    for (MAIN_Plant **PlantList = TempPlantList, **EndPlantList = TempPlantList + Tile->plantCount; PlantList < EndPlantList; ++PlantList)
-    {
-        // Give energy
-        if ((*PlantList)->stats.height > 0)
+    // Log
+    if (Map->settings->histLog.period != 0 && Map->time % Map->settings->histLog.period == 0)
+        if (!MAIN_HistLog(Map, NULL))
         {
-            uint64_t GetEnergy = (uint32_t)((double)Energy * (*PlantList)->gene.efficiency);
-            Energy -= GetEnergy;
-            (*PlantList)->stats.energy += GetEnergy;
-            if ((*PlantList)->stats.energy > (*PlantList)->stats.maxEnergy)
-                (*PlantList)->stats.energy = (*PlantList)->stats.maxEnergy;
+            _MAIN_AddError(MAIN_ERRORID_STEP_HISTLOG, MAIN_ERRORMES_HISTLOGSTEP, Map->time);
+            return false;
         }
-
-        // Take energy
-        if ((*PlantList)->stats.energyUsage > (*PlantList)->stats.energy)
-        {
-            MAIN_DestroyPlant(*PlantList);
-            continue;
-        }
-
-        (*PlantList)->stats.energy -= (*PlantList)->stats.energyUsage;
-
-        // Grow in height
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergyHeight && (*PlantList)->stats.height < (*PlantList)->gene.maxHeight && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateHeight)
-            if (!MAIN_GrowHeight(*PlantList))
-            {
-                _MAIN_AddError(MAIN_ERRORID_STEP_GROWHEIGHT, MAIN_ERRORMES_GROWHEIGHT);
-                return false;
-            }
-
-        // Kill if it did not grow
-        if ((*PlantList)->stats.height == 0)
-        {
-            MAIN_DestroyPlant(*PlantList);
-            continue;
-        }
-
-        // Grow in size
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minGrowthEnergySize && (*PlantList)->stats.size < (*PlantList)->gene.maxSize && (*PlantList)->stats.height > 0 && RNG_RandSf(Map->random) < (*PlantList)->gene.growthRateSize)
-            if (!MAIN_GrowSize(Tile, *PlantList))
-            {
-                _MAIN_AddError(MAIN_ERRORID_STEP_GROWSIZE, MAIN_ERRORMES_GROWSIZE);
-                return false;
-            }
-    
-        // Spawn
-        if ((*PlantList)->stats.energy >= (*PlantList)->gene.minSpawnEnergy && (*PlantList)->stats.height > 0 && RNG_RandSf(Map->random) < (*PlantList)->gene.spawnRate)
-            if (!MAIN_Spawn(Tile, *PlantList))
-            {
-                _MAIN_AddError(MAIN_ERRORID_STEP_SPAWN, MAIN_ERRORMES_SPAWN);
-                return false;
-            }
-
-        // Kill if it has no energy
-        if (Map->settings->killLow && (*PlantList)->stats.energy == 0)
-        {
-            MAIN_DestroyPlant(*PlantList);
-            continue;
-        }
-    }
-
-    // Free copy of plant list
-    free(TempPlantList);
 
     return true;
 }
@@ -1923,12 +1970,12 @@ MAIN_Tile *MAIN_GetRelativeTile(MAIN_Map *Map, MAIN_Tile *Tile, int32_t x, int32
     return Map->tiles + NewX + NewY * Map->size.w;
 }
 
-bool MAIN_CheckFilter(MAIN_Filter *Filter, MAIN_Plant *Plant)
+bool MAIN_CheckFilter(const MAIN_Filter *Filter, const MAIN_Plant *Plant)
 {
     return true;
 }
 
-bool MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint8Settings *LogSettings, const char *Name)
+bool MAIN_LogUint8(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint8Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -1936,7 +1983,7 @@ bool MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUi
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGUINT8_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2060,7 +2107,7 @@ bool MAIN_LogUint8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUi
     return true;
 }
 
-bool MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint16Settings *LogSettings, const char *Name)
+bool MAIN_LogUint16(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint16Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2068,7 +2115,7 @@ bool MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogU
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGUINT16_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2192,7 +2239,7 @@ bool MAIN_LogUint16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogU
     return true;
 }
 
-bool MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint32Settings *LogSettings, const char *Name)
+bool MAIN_LogUint32(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint32Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2200,7 +2247,7 @@ bool MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogU
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGUINT32_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2324,7 +2371,7 @@ bool MAIN_LogUint32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogU
     return true;
 }
 
-bool MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogUint64Settings *LogSettings, const char *Name)
+bool MAIN_LogUint64(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogUint64Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2332,7 +2379,7 @@ bool MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogU
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGUINT64_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2456,7 +2503,7 @@ bool MAIN_LogUint64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogU
     return true;
 }
 
-bool MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt8Settings *LogSettings, const char *Name)
+bool MAIN_LogInt8(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt8Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2464,7 +2511,7 @@ bool MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGINT8_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2588,7 +2635,7 @@ bool MAIN_LogInt8(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt
     return true;
 }
 
-bool MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt16Settings *LogSettings, const char *Name)
+bool MAIN_LogInt16(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt16Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2596,7 +2643,7 @@ bool MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogIn
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGINT16_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2720,7 +2767,7 @@ bool MAIN_LogInt16(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogIn
     return true;
 }
 
-bool MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt32Settings *LogSettings, const char *Name)
+bool MAIN_LogInt32(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt32Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2728,7 +2775,7 @@ bool MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogIn
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGINT32_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2852,7 +2899,7 @@ bool MAIN_LogInt32(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogIn
     return true;
 }
 
-bool MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogInt64Settings *LogSettings, const char *Name)
+bool MAIN_LogInt64(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogInt64Settings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2860,7 +2907,7 @@ bool MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogIn
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGINT64_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -2984,7 +3031,7 @@ bool MAIN_LogInt64(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogIn
     return true;
 }
 
-bool MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogFloatSettings *LogSettings, const char *Name)
+bool MAIN_LogFloat(MAIN_Map *Map, const MAIN_Filter *Filter, size_t Offset, const MAIN_LogFloatSettings *LogSettings, const char *Name)
 {
     // Make sure the iteration is not too high
     uint32_t Iteration = 0;
@@ -2992,7 +3039,7 @@ bool MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogFl
     if (Map->settings->histLog.period != 0)
         Iteration = Map->time / Map->settings->histLog.period;
 
-    if (Iteration >= Map->settings->histLog.maxFileCount)
+    if (Iteration > Map->settings->histLog.maxFileCount)
     {
         _MAIN_SetError(MAIN_ERRORID_LOGFLOAT_ITERATION, MAIN_ERRORMES_LOGITERATION, Iteration + 2, Map->settings->histLog.maxFileCount);
         return false;
@@ -3113,6 +3160,264 @@ bool MAIN_LogFloat(MAIN_Map *Map, MAIN_Filter *Filter, size_t Offset, MAIN_LogFl
     free(FileName);
 
     return true;
+}
+
+bool MAIN_HistLog(MAIN_Map *Map, const MAIN_Filter *Filter)
+{
+    // Do all of the logs
+    if (Map->settings->histLog.maxHeight.active)
+        if (!MAIN_LogUint8(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, maxHeight), &Map->settings->histLog.maxHeight, "maxHeight"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MAXHEIGTH, MAIN_ERRORMES_HISTLOG, "maxHeight");
+            return false;
+        }
+
+    if (Map->settings->histLog.maxSize.active)
+        if (!MAIN_LogUint8(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, maxSize), &Map->settings->histLog.maxSize, "maxSize"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MAXSIZE, MAIN_ERRORMES_HISTLOG, "maxSize");
+            return false;
+        }
+
+    if (Map->settings->histLog.efficiency.active)
+        if (!MAIN_LogFloat(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, efficiency), &Map->settings->histLog.efficiency, "efficiency"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_EFFICIENCY, MAIN_ERRORMES_HISTLOG, "efficiency");
+            return false;
+        }
+
+    if (Map->settings->histLog.growthRateHeight.active)
+        if (!MAIN_LogFloat(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, growthRateHeight), &Map->settings->histLog.growthRateHeight, "growthRateHeight"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_GROWTHRATEHEIGHT, MAIN_ERRORMES_HISTLOG, "growthRateHeight");
+            return false;
+        }
+
+    if (Map->settings->histLog.growthRateSize.active)
+        if (!MAIN_LogFloat(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, growthRateSize), &Map->settings->histLog.growthRateSize, "growthRateSize"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_GROWTHRATESIZE, MAIN_ERRORMES_HISTLOG, "growthRateSize");
+            return false;
+        }
+
+    if (Map->settings->histLog.minGrowthEnergyHeight.active)
+        if (!MAIN_LogUint16(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, minGrowthEnergyHeight), &Map->settings->histLog.minGrowthEnergyHeight, "minGrowthEnergyHeight"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MINGROWTHENERGYHEIGHT, MAIN_ERRORMES_HISTLOG, "minGrowthEnergyHeight");
+            return false;
+        }
+
+    if (Map->settings->histLog.minGrowthEnergySize.active)
+        if (!MAIN_LogUint16(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, minGrowthEnergySize), &Map->settings->histLog.minGrowthEnergySize, "minGrowthEnergySize"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MINGROWTHENERGYSIZE, MAIN_ERRORMES_HISTLOG, "minGrowthEnergySize");
+            return false;
+        }
+
+    if (Map->settings->histLog.spawnRate.active)
+        if (!MAIN_LogFloat(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, spawnRate), &Map->settings->histLog.spawnRate, "spawnRate"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_SPAWNRATE, MAIN_ERRORMES_HISTLOG, "spawnRate");
+            return false;
+        }
+
+    if (Map->settings->histLog.minSpawnEnergy.active)
+        if (!MAIN_LogUint16(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, minSpawnEnergy), &Map->settings->histLog.minSpawnEnergy, "minSpawnEnergy"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MINSPAWNENERGY, MAIN_ERRORMES_HISTLOG, "minSpawnEnergy");
+            return false;
+        }
+
+    if (Map->settings->histLog.maxTileEnergy.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, maxTileEnergy), &Map->settings->histLog.maxTileEnergy, "maxTileEnergy"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MAXTILEENERGY, MAIN_ERRORMES_HISTLOG, "maxTileEnergy");
+            return false;
+        }
+
+    if (Map->settings->histLog.spawnEnergy.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, spawnEnergy), &Map->settings->histLog.spawnEnergy, "spawnEnergy"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_SPAWNENERGY, MAIN_ERRORMES_HISTLOG, "spawnEnergy");
+            return false;
+        }
+
+    if (Map->settings->histLog.maxSpawnEnergy.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, maxSpawnEnergy), &Map->settings->histLog.maxSpawnEnergy, "maxSpawnEnergy"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MAXSPAWNENERGY, MAIN_ERRORMES_HISTLOG, "maxSpawnEnergy");
+            return false;
+        }
+
+    if (Map->settings->histLog.mutationRate.active)
+        if (!MAIN_LogFloat(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, mutationRate), &Map->settings->histLog.mutationRate, "mutationRate"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MUTATIONRATE, MAIN_ERRORMES_HISTLOG, "mutationRate");
+            return false;
+        }
+
+    if (Map->settings->histLog.mutationAttempts.active)
+        if (!MAIN_LogUint8(Map, Filter, offsetof(MAIN_Plant, gene) + offsetof(MAIN_Gene, mutationAttempts), &Map->settings->histLog.mutationAttempts, "mutationAttempts"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MUTATIONATTEMPTS, MAIN_ERRORMES_HISTLOG, "mutationAttempts");
+            return false;
+        }
+
+    if (Map->settings->histLog.size.active)
+        if (!MAIN_LogUint8(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, size), &Map->settings->histLog.size, "size"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_SIZE, MAIN_ERRORMES_HISTLOG, "size");
+            return false;
+        }
+
+    if (Map->settings->histLog.height.active)
+        if (!MAIN_LogUint8(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, height), &Map->settings->histLog.height, "height"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_HEIGHT, MAIN_ERRORMES_HISTLOG, "height");
+            return false;
+        }
+
+    if (Map->settings->histLog.energy.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, energy), &Map->settings->histLog.energy, "energy"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_ENERGY, MAIN_ERRORMES_HISTLOG, "energy");
+            return false;
+        }
+
+    if (Map->settings->histLog.age.active)
+        if (!MAIN_LogUint64(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, age), &Map->settings->histLog.age, "age"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_AGE, MAIN_ERRORMES_HISTLOG, "age");
+            return false;
+        }
+
+    if (Map->settings->histLog.energyUsage.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, energyUsage), &Map->settings->histLog.energyUsage, "energyUsage"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_ENERGYUSAGE, MAIN_ERRORMES_HISTLOG, "energyUsage");
+            return false;
+        }
+
+    if (Map->settings->histLog.maxEnergy.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, maxEnergy), &Map->settings->histLog.maxEnergy, "maxEnergy"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_MAXENERGY, MAIN_ERRORMES_HISTLOG, "maxEnergy");
+            return false;
+        }
+
+    if (Map->settings->histLog.biomass.active)
+        if (!MAIN_LogUint32(Map, Filter, offsetof(MAIN_Plant, stats) + offsetof(MAIN_PlantStats, biomass), &Map->settings->histLog.biomass, "biomass"))
+        {
+            _MAIN_AddError(MAIN_ERRORID_HISTLOG_BIOMASS, MAIN_ERRORMES_HISTLOG, "biomass");
+            return false;
+        }
+
+    return true;
+}
+
+uint32_t MAIN_GeneDiff(const MAIN_Gene *Gene1, const MAIN_Gene *Gene2)
+{
+    uint32_t Diff = 0;
+
+    // Go through all bits
+    for (const uint8_t *UseGene1 = (uint8_t *)Gene1, *UseGene2 = (uint8_t)Gene2, *EndGene = (uint8_t *)Gene1 + sizeof(MAIN_Gene); UseGene1 < EndGene; ++UseGene1, ++UseGene2)
+    {
+        uint8_t Byte = *UseGene1 ^ *UseGene2;
+
+        for (uint8_t Shift = 0; Shift < 8; ++Shift)
+            Diff += (Byte >> Shift) & 1;
+    }
+
+    return Diff;
+}
+
+MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t **Count, uint32_t *SpeciesCount)
+{
+    // Initialise the array
+    uint32_t UniqueCount = 0;
+    uint32_t MaxCount = 1;
+    MAIN_Plant **Unique = (MAIN_Plant **)malloc(sizeof(MAIN_Plant *));
+
+    if (Unique == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_FINDUNIQUESPECIES_MALLOC, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(MAIN_Plant *));
+        return NULL;
+    }
+
+    uint32_t *Population = (uint32_t *)malloc(sizeof(uint32_t));
+
+    if (Population == NULL)
+    {
+        _MAIN_AddErrorForeign(MAIN_ERRORID_FINDUNIQUESPECIES_MALLOC2, strerror(errno), MAIN_ERRORMES_MALLOC, sizeof(uint32_t));
+        free(Unique);
+        return NULL;
+    }
+
+    // Go through all of the plants
+    for (MAIN_Plant **PlantList = Map->plantList, **EndPlantList = Map->plantList + Map->plantCount; PlantList < EndPlantList; ++PlantList)
+    {
+        // Go through and check if it matches any previous species
+        MAIN_Plant **SpeciesList = Unique;
+        MAIN_Plant **EndSpeciesList = Unique + UniqueCount;
+
+        for (; SpeciesList < EndSpeciesList; ++SpeciesList)
+            if (MAIN_GeneDiff(&(*PlantList)->gene, &(*SpeciesList)->gene) <= Tolerance)
+                break;
+
+        // Add a population
+        if (SpeciesList < EndSpeciesList)
+            ++Population[SpeciesList - EndSpeciesList];
+
+        // Add new species
+        else
+        {
+            // Make lists larger
+            if (++UniqueCount > MaxCount)
+            {
+                MaxCount *= 2;
+                MAIN_Plant **NewUnique = (MAIN_Plant **)realloc((void *)Unique, sizeof(MAIN_Plant *) * MaxCount);
+
+                if (NewUnique == NULL)
+                {
+                    _MAIN_AddErrorForeign(MAIN_ERRORID_FINDUNIQUESPECIES_REALLOC, strerror(errno), MAIN_ERRORMES_REALLOC, sizeof(MAIN_Plant *) * MaxCount);
+                    free(Unique);
+                    free(Population);
+                    return NULL;
+                }
+
+                uint32_t *NewPopulation = (uint32_t *)realloc((void *)Population, sizeof(uint32_t) * MaxCount);
+
+                if (NewPopulation == NULL)
+                {
+                    _MAIN_AddErrorForeign(MAIN_ERRORID_FINDUNIQUESPECIES_REALLOC2, strerror(errno), MAIN_ERRORMES_REALLOC, sizeof(uint32_t) * MaxCount);
+                    free(NewUnique);
+                    free(Population);
+                    return NULL;
+                }
+
+                Unique = NewUnique;
+                Population = NewPopulation;
+            }
+
+            Population[UniqueCount - 1] = 1;
+            Unique[UniqueCount - 1] = *PlantList;
+        }
+    }
+
+    // Shrink the arrays
+    Unique = (MAIN_Plant **)realloc((void *)Unique, sizeof(MAIN_Plant *) * UniqueCount);
+    Population = (uint32_t *)realloc((void *)Population, sizeof(uint32_t) * UniqueCount);
+
+    // Set the values
+    if (Count != NULL)
+        *Count = Population;
+
+    else
+        free(Population);
+
+    *SpeciesCount = UniqueCount;
+
+    return Unique;
 }
 
 
@@ -3913,6 +4218,9 @@ int main(int argc, char **argv)
         printf("Unable to create map: %s\n", MAIN_GetError());
         return -1;
     }
+
+    // Do first log
+    //MAIN_HistLog(Map, NULL);
 
     // Check the tile energy
     /*for (MAIN_Tile *TileList = Map->tiles, *EndTileList = Map->tiles + Map->size.w * Map->size.h; TileList < EndTileList; TileList += Map->size.w)
