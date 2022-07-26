@@ -181,6 +181,8 @@ typedef struct __MAIN_Plant MAIN_Plant;
 typedef struct __MAIN_Gene MAIN_Gene;
 typedef struct __MAIN_PlantStats MAIN_PlantStats;
 typedef struct __MAIN_Filter MAIN_Filter;
+typedef struct __MAIN_FilterStatement MAIN_FilterStatement;
+typedef union __MAIN_FilterValue MAIN_FilterValue;
 typedef struct __MAIN_LogUint8Settings MAIN_LogUint8Settings;
 typedef struct __MAIN_LogUint16Settings MAIN_LogUint16Settings;
 typedef struct __MAIN_LogUint32Settings MAIN_LogUint32Settings;
@@ -192,6 +194,14 @@ typedef struct __MAIN_LogInt64Settings MAIN_LogInt64Settings;
 typedef struct __MAIN_LogFloatSettings MAIN_LogFloatSettings;
 typedef struct __MAIN_HistLogSettings MAIN_HistLogSettings;
 typedef enum __MAIN_Direction MAIN_Direction;
+typedef enum __MAIN_FilterValueType MAIN_FilterValueType;
+
+enum __MAIN_FilterValueType {
+    MAIN_FILTERVALUETYPE_NUMBER,
+    MAIN_FILTERVALUETYPE_PLANT,
+    MAIN_FILTERVALUETYPE_GENE,
+    MAIN_FILTERVALUETYPE_STAT
+};
 
 enum __MAIN_Direction {
     MAIN_DIR_POSX = 0,
@@ -446,8 +456,6 @@ struct __MAIN_Gene {
     uint32_t maxTileEnergy;         // The maximum amount of energy allowed to store per tile
     uint32_t spawnEnergy;           // The amount of energy to give each seed
     uint32_t maxSpawnEnergy;        // The amount of energy to take from the plant during spawning
-    uint8_t spawnSize;             // The average number of seeds per spawning
-    uint8_t spawnSpread;           // The spread of the number of seeds per spawning
     double mutationRate;            // The probability that a mutation occurs during spawning
     uint8_t mutationAttempts;      // The number of attempts to do a mutation during spawning
 };
@@ -469,8 +477,24 @@ struct __MAIN_Plant {
     MAIN_Map *map; // The map this plant belongs to
 };
 
-struct __MAIN_Filter {
+union __MAIN_FilterValue {
+    double number; // Just a number
+    MAIN_Plant *plant; // Pointer to plant if that is needed
+    char *gene; // If a gene is used
+    char *stat; // If a stat is used
+};
 
+struct __MAIN_FilterStatement {
+    MAIN_FilterValueType type1; // The type of value for the left value
+    MAIN_FilterValue value1; // The left value
+    MAIN_FilterValueType type2; // The type of value for the right value
+    MAIN_FilterValue value2; // The right value
+};
+
+struct __MAIN_Filter {
+    MAIN_FilterStatement **statements; // The list of filters, the first layers are ored together, the next layer is anded
+    uint8_t *subCount; // List with all the lengths of the second layer
+    uint8_t count; // The length of the first layer
 };
 
 // Settings translation tables
@@ -860,7 +884,16 @@ bool MAIN_HistLog(MAIN_Map *Map, const MAIN_Filter *Filter);
 uint32_t MAIN_GeneDiff(const MAIN_Gene *Gene1, const MAIN_Gene *Gene2);
 
 // Find the number of unique species
-MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t **Count, uint32_t *SpeciesCount);
+MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t MinCount, uint32_t **Count, uint32_t *SpeciesCount);
+
+// Print the genome of a plant
+void MAIN_PrintGene(const MAIN_Gene *Gene);
+
+// Print the stats of a plant
+void MAIN_PrintPlantStats(const MAIN_Map *Map, const MAIN_PlantStats *Stats);
+
+// Print a plant
+void MAIN_PrintPlant(const MAIN_Plant *Plant);
 
 // Init functions
 void MAIN_InitUint64Constraint(MAIN_Uint64Constraint *Struct);
@@ -1547,9 +1580,16 @@ bool MAIN_RemoveFromMap(MAIN_Map *Map, const MAIN_Plant *Plant)
 
 uint32_t MAIN_EnergyUsage(const MAIN_Plant *Plant)
 {
-    uint32_t StorageEnergy = (uint32_t)(Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow));
-    uint32_t BaseEnergy = (uint32_t)(Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow));
-    return StorageEnergy + BaseEnergy + Plant->map->settings->energy.baseCost;
+    double StorageEnergy = Plant->map->settings->energy.storageRate * pow((double)Plant->stats.maxEnergy, Plant->map->settings->energy.storagePow);
+    double BaseEnergy = Plant->map->settings->energy.baseRate * pow((double)Plant->stats.height, Plant->map->settings->energy.heightPow) * pow((double)Plant->stats.size, Plant->map->settings->energy.sizePow) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow);
+    
+    if (StorageEnergy > 1e8)
+        StorageEnergy = 1e8;
+
+    if (BaseEnergy > 1e8)
+        BaseEnergy = 1e8;
+
+    return (uint32_t)(StorageEnergy + BaseEnergy) + Plant->map->settings->energy.baseCost;
 }
 
 bool MAIN_CreatePlant(MAIN_Map *Map, MAIN_Tile *Tile, uint32_t Energy, const MAIN_Gene *ParentGene)
@@ -1634,7 +1674,14 @@ uint32_t MAIN_Biomass(const MAIN_Plant *Plant)
 {
     uint32_t StorageSize = (uint32_t)((double)Plant->stats.maxEnergy * Plant->map->settings->energy.growthStorage);
     uint32_t BaseSize = (uint32_t)((double)(Plant->stats.height * Plant->stats.size) * exp(1. / (1. - (double)Plant->gene.efficiency) * Plant->map->settings->energy.effPow) * Plant->map->settings->energy.growthBase);
-    return StorageSize + BaseSize;
+    
+    if (StorageSize > 1e8)
+        StorageSize = 1e8;
+
+    if (BaseSize > 1e8)
+        BaseSize = 1e8;
+    
+    return (uint32_t)(StorageSize + BaseSize);
 }
 
 bool MAIN_Step(MAIN_Map *Map)
@@ -3320,7 +3367,7 @@ uint32_t MAIN_GeneDiff(const MAIN_Gene *Gene1, const MAIN_Gene *Gene2)
     uint32_t Diff = 0;
 
     // Go through all bits
-    for (const uint8_t *UseGene1 = (uint8_t *)Gene1, *UseGene2 = (uint8_t)Gene2, *EndGene = (uint8_t *)Gene1 + sizeof(MAIN_Gene); UseGene1 < EndGene; ++UseGene1, ++UseGene2)
+    for (const uint8_t *UseGene1 = (uint8_t *)Gene1, *UseGene2 = (uint8_t *)Gene2, *EndGene = (uint8_t *)Gene1 + sizeof(MAIN_Gene); UseGene1 < EndGene; ++UseGene1, ++UseGene2)
     {
         uint8_t Byte = *UseGene1 ^ *UseGene2;
 
@@ -3331,7 +3378,7 @@ uint32_t MAIN_GeneDiff(const MAIN_Gene *Gene1, const MAIN_Gene *Gene2)
     return Diff;
 }
 
-MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t **Count, uint32_t *SpeciesCount)
+MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t MinCount, uint32_t **Count, uint32_t *SpeciesCount)
 {
     // Initialise the array
     uint32_t UniqueCount = 0;
@@ -3366,7 +3413,7 @@ MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t 
 
         // Add a population
         if (SpeciesList < EndSpeciesList)
-            ++Population[SpeciesList - EndSpeciesList];
+            ++Population[SpeciesList - Unique];
 
         // Add new species
         else
@@ -3404,6 +3451,19 @@ MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t 
         }
     }
 
+    // Remove small species
+    MAIN_Plant **SrcUnique = Unique;
+    MAIN_Plant **DstUnique = Unique;
+
+    for (uint32_t *SrcPopulation = Population, *DstPopulation = Population, *EndPopulation = Population + UniqueCount; SrcPopulation < EndPopulation; ++SrcPopulation, ++SrcUnique)
+        if (*SrcPopulation >= MinCount)
+        {
+            *(DstUnique++) = *SrcUnique;
+            *(DstPopulation++) = *SrcPopulation;
+        }
+
+    UniqueCount = DstUnique - Unique;
+
     // Shrink the arrays
     Unique = (MAIN_Plant **)realloc((void *)Unique, sizeof(MAIN_Plant *) * UniqueCount);
     Population = (uint32_t *)realloc((void *)Population, sizeof(uint32_t) * UniqueCount);
@@ -3418,6 +3478,32 @@ MAIN_Plant **MAIN_FindUniqueSpecies(MAIN_Map *Map, uint32_t Tolerance, uint32_t 
     *SpeciesCount = UniqueCount;
 
     return Unique;
+}
+
+void MAIN_PrintGene(const MAIN_Gene *Gene)
+{
+    printf("{.maxHeight = %u, .maxSize = %u, .efficiency = %.2g, .growthRateHeight = %.2g, .growthRateSize = %.2g, .minGrowthEnergyHeight = %u, .minGrowthEnergySize = %u, .spawnRate = %.2g, .minSpawnEnergy = %u, .maxTileEnergy = %u, .spawnEnergy = %u, .maxSpawnEnergy = %u, .mutationRate = %.2g, .mutationAttempts = %u}", Gene->maxHeight, Gene->maxSize, Gene->efficiency, Gene->growthRateHeight, Gene->growthRateSize, Gene->minGrowthEnergyHeight, Gene->minGrowthEnergySize, Gene->spawnRate, Gene->minSpawnEnergy, Gene->maxTileEnergy, Gene->spawnEnergy, Gene->maxSpawnEnergy, Gene->mutationRate, Gene->mutationAttempts);
+}
+
+void MAIN_PrintPlantStats(const MAIN_Map *Map, const MAIN_PlantStats *Stats)
+{
+    // Print the values
+    printf("{.age = %lu, .height = %u, .size = %u, .energy = %u, .maxEnergy = %u, .biomass = %u, .energyUsage = %u}", Map->time - Stats->age, Stats->height, Stats->size, Stats->energy, Stats->maxEnergy, Stats->biomass, Stats->energyUsage);
+}
+
+void MAIN_PrintPlant(const MAIN_Plant *Plant)
+{
+    printf("{");
+
+    // Print the gene
+    printf(".gene = ");
+    MAIN_PrintGene(&Plant->gene);
+
+    // Print the stats
+    printf(", .stats = ");
+    MAIN_PrintPlantStats(Plant->map, &Plant->stats);
+
+    printf("}");
 }
 
 
@@ -3764,8 +3850,6 @@ void MAIN_InitGene(MAIN_Gene *Struct)
     Struct->spawnEnergy = 0;
     Struct->maxSpawnEnergy = 0;
     Struct->spawnRate = 0.;
-    Struct->spawnSize = 0;
-    Struct->spawnSpread = 0;
 }
 
 void MAIN_InitSize(MAIN_Size *Struct)
@@ -4354,7 +4438,7 @@ int main(int argc, char **argv)
 
         printf("PlantCount: %u/%u - ", Map->plantCount, Count);
         printf("SizeCount: %u/%u - ", SizeCount, SizeCount2);
-        printf("Age: %u\n", Age);
+        printf("Age: %u/%u\n", Age, Map->time);
 
         printf("Efficiency: %.2f - ", Eff);
         printf("Size: %u/%u(%.2f)[%u/%.2f] - ", Size, MaxSize, SizeLevel, MinEnergySize, SizeRate);
@@ -4373,6 +4457,33 @@ int main(int argc, char **argv)
 
     printf("FinalPlantCount: %u\n", Map->plantCount);
     printf("SimulationTime: %.2g s (%.2g s/step)\n", (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC, (double)(EndTime - StartTime) / (double)CLOCKS_PER_SEC / (double)(Settings->steps * Settings->subSteps));
+
+    // Find the number of unique species, use tolerance = 30
+    uint32_t Count = 0;
+    uint32_t *Pop = NULL;
+    uint32_t Tolerance = 30;
+
+    MAIN_Plant **SpeciesList = MAIN_FindUniqueSpecies(Map, Tolerance, 100, &Pop, &Count);
+    
+    if (SpeciesList == NULL)
+    {
+        printf("Unable to find unique species: %s\n", MAIN_GetError());
+        return 0;
+    }
+
+    printf("Number of species: %u with tolerance: %u:\n\n", Count, Tolerance);
+
+    uint32_t *NewPop = Pop;
+
+    for (MAIN_Plant **NewSpeciesList = SpeciesList, **EndSpeciesList = SpeciesList + Count; NewSpeciesList < EndSpeciesList; ++NewSpeciesList, ++NewPop)
+    {
+        printf("Pop = %u, Plant = ", *NewPop);
+        MAIN_PrintPlant(*NewSpeciesList);
+        printf("\n\n");
+    }
+
+    free(SpeciesList);
+    free(Pop);
 
     // Clean up
     MAIN_DestroyMap(Map);

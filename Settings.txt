@@ -1,6 +1,6 @@
 killIlligal = true;
 killLow = true;
-spawnRange = 20000;
+spawnRange = 10000;
 spawnCount = 16;
 steps = 10;
 subSteps = 1000000;
@@ -11,25 +11,25 @@ map = {
     minEnergy = 100;
     maxEnergy = 10000;
     energyMethod = "const";
-    energyNoise = 0.5;
+    energyNoise = 0.2;
 };
 
 init = {
     count = 1000;
-    seed = 8;
+    seed = 7;
     energy = 10000;
 };
 
 energy = {
     storageRate = 5e-3;
     storagePow = 1.;
-    baseRate = 5.;
-    heightPow = 0.5;
+    baseRate = 20.;
+    heightPow = 1.;
     sizePow = 0.;
-    effPow = 1.;
+    effPow = 0.5;
     growthBase = 0.5;
     growthStorage = 2e-2;
-    baseCost = 100;
+    baseCost = 10;
     spawnEfficiency = 0.5;
 };
 
